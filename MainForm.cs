@@ -113,6 +113,8 @@ namespace UnityDownloader
                     editorItems.Add(editorItem);
                 }
 
+                gridView.OptionsBehavior.ReadOnly = true;
+                gridView.OptionsBehavior.Editable = false;
 
                 gridView.OptionsSelection.MultiSelect = true;
                 gridView.OptionsSelection.MultiSelectMode = GridMultiSelectMode.CheckBoxRowSelect;
