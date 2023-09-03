@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             splitContainerControl1 = new DevExpress.XtraEditors.SplitContainerControl();
             groupControl1 = new DevExpress.XtraEditors.GroupControl();
             txtSaveDirectory = new DevExpress.XtraEditors.TextEdit();
@@ -238,7 +239,8 @@
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1364, 968);
             Controls.Add(splitContainerControl1);
-            FormBorderStyle = FormBorderStyle.FixedToolWindow;
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            IconOptions.Icon = (Icon)resources.GetObject("MainForm.IconOptions.Icon");
             Name = "MainForm";
             Text = "Unity资源下载";
             Load += MainForm_Load;
