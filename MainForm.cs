@@ -67,7 +67,7 @@ namespace UnityDownloader
             await using var browser = await Puppeteer.LaunchAsync(
                 new LaunchOptions
                 {
-                    Headless = false,
+                    Headless = true,
                     IgnoreHTTPSErrors = true,
                     Args = new[]
                     {
@@ -115,7 +115,7 @@ namespace UnityDownloader
                 }
             }
 
-            var json=JsonConvert.SerializeObject(dict, Formatting.Indented);
+            var json = JsonConvert.SerializeObject(dict, Formatting.Indented);
             await File.WriteAllTextAsync(EditorJSONFile, json);
 
             await page.CloseAsync();
