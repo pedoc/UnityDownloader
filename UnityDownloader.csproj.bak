@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows7.0</TargetFramework>
+    <TargetFramework>net6.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>False</UseWPF>
@@ -15,16 +15,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DevExpress.Win.Design" Version="24.1.4" />
-    <PackageReference Include="DevExpress.Win" Version="24.1.4" />
-    <PackageReference Include="DevExpress.Win.BonusSkins" Version="24.1.4" />
+    <PackageReference Include="DevExpress.Win.Design" Version="23.1.4" />
+    <PackageReference Include="DevExpress.Win" Version="23.1.4" />
+    <PackageReference Include="DevExpress.Win.BonusSkins" Version="23.1.4" />
     <PackageReference Include="EmptyLicensesLicx" Version="3.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="HtmlAgilityPack" Version="1.11.61" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="PuppeteerSharp" Version="18.0.5" />
   </ItemGroup>
 
   <ItemGroup>

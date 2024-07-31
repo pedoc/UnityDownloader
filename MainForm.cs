@@ -2,9 +2,13 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Text.RegularExpressions;
 using DevExpress.XtraEditors;
 using DevExpress.XtraGrid.Views.Grid;
 using Newtonsoft.Json;
+using PuppeteerSharp;
+
+// ReSharper disable AsyncApostle.ConfigureAwaitHighlighting
 
 #pragma warning disable SYSLIB0014
 
@@ -41,10 +45,83 @@ namespace UnityDownloader
                 return;
             }
 
-            DownloadFileAsync(url, EditorJSONFile, args =>
+            DownloadFileAsync(url, EditorJSONFile, args => { ShowMessage($"编辑器资源下载进度：{args.ProgressPercentage}%"); },
+                downloadCompletedHandler);
+        }
+
+        private async Task<bool> GenerateEditorJsonFileAsync()
+        {
+            const string url = "https://unity3d.com/get-unity/download/archive";
+            // var html = DownloadContent(url);
+            // if (string.IsNullOrEmpty(html))
+            // {
+            //     ShowMessage("拉取u3d版本列表失败," + url);
+            //     return false;
+            // }
+
+            var browserFetcher = new BrowserFetcher()
             {
-                ShowMessage($"编辑器资源下载进度：{args.ProgressPercentage}%");
-            }, downloadCompletedHandler);
+                WebProxy = new WebProxy(txtProxy.Text.Trim())
+            };
+            await browserFetcher.DownloadAsync();
+            await using var browser = await Puppeteer.LaunchAsync(
+                new LaunchOptions
+                {
+                    Headless = false,
+                    IgnoreHTTPSErrors = true,
+                    Args = new[]
+                    {
+                        "--proxy-server=\"" + txtProxy.Text.Trim() + "\""
+                    }
+                });
+            await using var page = await browser.NewPageAsync();
+            await page.GoToAsync(url, new NavigationOptions()
+            {
+                WaitUntil = [WaitUntilNavigation.DOMContentLoaded]
+            });
+            var elements = await page.QuerySelectorAllAsync(
+                "body > div.flex.min-h-screen.flex-col > main > div.relative.flex.flex-wrap.justify-center.gap-2.p-2 >button ");
+            var dict = new Dictionary<string, object>();
+            foreach (var elementHandle in elements)
+            {
+                await elementHandle.ClickAsync();
+
+                var downloadElements = await page.QuerySelectorAllAsync("a[href^=\"unityhub://\"]");
+                foreach (var downloadElement in downloadElements)
+                {
+                    var href = await downloadElement.GetPropertyAsync("href");
+                    if (href == null) continue;
+                    var hrefString = href.ToString();
+                    if (string.IsNullOrEmpty(hrefString)) continue;
+                    var match = Regex.Match(hrefString, "unityhub://(?<version>.*)/(?<hash>.*)", RegexOptions.Compiled,
+                        TimeSpan.FromSeconds(3));
+                    if (match.Success)
+                    {
+                        var version = match.Groups["version"].Value;
+                        var hash = match.Groups["hash"].Value;
+
+                        dict[version] = new
+                        {
+                            linux =
+                                $"https://download.unity3d.com/download_unity/{hash}/LinuxEditorInstaller/Unity.tar.xz",
+                            mac =
+                                $"https://download.unity3d.com/download_unity/{hash}/MacEditorInstaller/Unity-{version}.pkg",
+                            macArm64 =
+                                $"https://download.unity3d.com/download_unity/{hash}/MacEditorInstallerArm64/Unity-{version}.pkg",
+                            win64 =
+                                $"https://download.unity3d.com/download_unity/{hash}/Windows64EditorInstaller/UnitySetup64-{version}.exe"
+                        };
+                    }
+                }
+            }
+
+            var json=JsonConvert.SerializeObject(dict, Formatting.Indented);
+            await File.WriteAllTextAsync(EditorJSONFile, json);
+
+            await page.CloseAsync();
+            await browser.CloseAsync();
+
+            return true;
         }
 
         public void TryLoadEditorJson()
@@ -129,6 +206,25 @@ namespace UnityDownloader
             }
         }
 
+        private string DownloadContent(
+            string url)
+        {
+            try
+            {
+                using WebClient wb = new WebClient();
+                if (!string.IsNullOrEmpty(txtProxy.Text))
+                {
+                    wb.Proxy = new WebProxy(txtProxy.Text);
+                }
+
+                return wb.DownloadString(new Uri(url));
+            }
+            catch (Exception e)
+            {
+                ShowMessage($"下载 {url} 时出错,原因:{e.Message}");
+                return string.Empty;
+            }
+        }
 
         private void DownloadFileAsync(
             string url,
@@ -163,25 +259,24 @@ namespace UnityDownloader
             }
         }
 
-        private void DownloadFile(
-            string url,
-            string path)
-        {
-            using WebClient wb = new WebClient();
-            if (!string.IsNullOrEmpty(txtProxy.Text))
-            {
-                wb.Proxy = new WebProxy(txtProxy.Text);
-            }
-            wb.DownloadFile(new Uri(url), path);
-        }
 
-        private void btnDownloadEditorJson_Click(object sender, EventArgs e)
+        private async void btnDownloadEditorJson_Click(object sender, EventArgs e)
         {
-            DownloadEditorJsonAsync(_ =>
+            // DownloadEditorJsonAsync(_ =>
+            // {
+            //     TryLoadEditorJson();
+            //     ShowMessage("编辑器资源下载成功并完成加载");
+            // });
+
+            if (await GenerateEditorJsonFileAsync())
             {
                 TryLoadEditorJson();
                 ShowMessage("编辑器资源下载成功并完成加载");
-            });
+            }
+            else
+            {
+                ShowMessage("编辑器资源下载失败");
+            }
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -205,6 +300,7 @@ namespace UnityDownloader
                 ShowMessage("请先选择要下载的项");
                 return;
             }
+
             ShowMessage($"当前选中了 {rows.Length} 项准备下载");
             Parallel.ForEachAsync(rows, new ParallelOptions()
             {
@@ -228,7 +324,6 @@ namespace UnityDownloader
                 {
                     editorComponent.DownloadProgress = $"{dpce.ProgressPercentage}%,{sw.Elapsed}";
                     view.RefreshRow(i);
-
                 }, ace =>
                 {
                     sw.Stop();
@@ -236,13 +331,7 @@ namespace UnityDownloader
                     mre.Set();
                 });
                 mre.WaitOne();
-            }).ContinueWith((t) =>
-            {
-                Invoke(() =>
-                {
-                    btnDownloadEditor.Enabled = true;
-                });
-            });
+            }).ContinueWith((t) => { Invoke(() => { btnDownloadEditor.Enabled = true; }); });
         }
     }
 }
