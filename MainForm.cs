@@ -327,7 +327,7 @@ namespace UnityDownloader
                 }, ace =>
                 {
                     sw.Stop();
-                    editorComponent.DownloadProgress = $"下载完成,{sw.Elapsed}";
+                    //editorComponent.DownloadProgress = $"下载完成,{sw.Elapsed}";
                     mre.Set();
                 });
                 mre.WaitOne();
