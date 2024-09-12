@@ -31,6 +31,7 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             splitContainerControl1 = new DevExpress.XtraEditors.SplitContainerControl();
             groupControl1 = new DevExpress.XtraEditors.GroupControl();
+            btnOpenDirectory = new DevExpress.XtraEditors.SimpleButton();
             txtSelector = new DevExpress.XtraEditors.TextEdit();
             labelControl5 = new DevExpress.XtraEditors.LabelControl();
             txtSaveDirectory = new DevExpress.XtraEditors.TextEdit();
@@ -47,7 +48,8 @@
             gridControl = new DevExpress.XtraGrid.GridControl();
             gridView = new DevExpress.XtraGrid.Views.Grid.GridView();
             memTxt = new DevExpress.XtraEditors.MemoEdit();
-            btnOpenDirectory = new DevExpress.XtraEditors.SimpleButton();
+            pbar = new DevExpress.XtraEditors.ProgressBarControl();
+            lblTotalTime = new DevExpress.XtraEditors.LabelControl();
             ((System.ComponentModel.ISupportInitialize)splitContainerControl1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)splitContainerControl1.Panel1).BeginInit();
             splitContainerControl1.Panel1.SuspendLayout();
@@ -70,6 +72,7 @@
             ((System.ComponentModel.ISupportInitialize)gridControl).BeginInit();
             ((System.ComponentModel.ISupportInitialize)gridView).BeginInit();
             ((System.ComponentModel.ISupportInitialize)memTxt.Properties).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)pbar.Properties).BeginInit();
             SuspendLayout();
             // 
             // splitContainerControl1
@@ -94,6 +97,8 @@
             // 
             // groupControl1
             // 
+            groupControl1.Controls.Add(lblTotalTime);
+            groupControl1.Controls.Add(pbar);
             groupControl1.Controls.Add(btnOpenDirectory);
             groupControl1.Controls.Add(txtSelector);
             groupControl1.Controls.Add(labelControl5);
@@ -113,6 +118,15 @@
             groupControl1.Size = new Size(1364, 183);
             groupControl1.TabIndex = 0;
             groupControl1.Text = "选项";
+            // 
+            // btnOpenDirectory
+            // 
+            btnOpenDirectory.Location = new Point(365, 143);
+            btnOpenDirectory.Name = "btnOpenDirectory";
+            btnOpenDirectory.Size = new Size(75, 23);
+            btnOpenDirectory.TabIndex = 12;
+            btnOpenDirectory.Text = "打开目录";
+            btnOpenDirectory.Click += btnOpenDirectory_Click;
             // 
             // txtSelector
             // 
@@ -256,14 +270,19 @@
             memTxt.Size = new Size(233, 775);
             memTxt.TabIndex = 0;
             // 
-            // btnOpenDirectory
+            // pbar
             // 
-            btnOpenDirectory.Location = new Point(365, 143);
-            btnOpenDirectory.Name = "btnOpenDirectory";
-            btnOpenDirectory.Size = new Size(75, 23);
-            btnOpenDirectory.TabIndex = 12;
-            btnOpenDirectory.Text = "打开目录";
-            btnOpenDirectory.Click += btnOpenDirectory_Click;
+            pbar.Location = new Point(727, 114);
+            pbar.Name = "pbar";
+            pbar.Size = new Size(405, 18);
+            pbar.TabIndex = 13;
+            // 
+            // lblTotalTime
+            // 
+            lblTotalTime.Location = new Point(1159, 116);
+            lblTotalTime.Name = "lblTotalTime";
+            lblTotalTime.Size = new Size(0, 14);
+            lblTotalTime.TabIndex = 14;
             // 
             // MainForm
             // 
@@ -299,6 +318,7 @@
             ((System.ComponentModel.ISupportInitialize)gridControl).EndInit();
             ((System.ComponentModel.ISupportInitialize)gridView).EndInit();
             ((System.ComponentModel.ISupportInitialize)memTxt.Properties).EndInit();
+            ((System.ComponentModel.ISupportInitialize)pbar.Properties).EndInit();
             ResumeLayout(false);
         }
 
@@ -323,5 +343,7 @@
         private DevExpress.XtraEditors.TextEdit txtSelector;
         private DevExpress.XtraEditors.LabelControl labelControl5;
         private DevExpress.XtraEditors.SimpleButton btnOpenDirectory;
+        private DevExpress.XtraEditors.LabelControl lblTotalTime;
+        private DevExpress.XtraEditors.ProgressBarControl pbar;
     }
 }

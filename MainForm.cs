@@ -312,6 +312,8 @@ namespace UnityDownloader
         private async void btnDownloadEditor_Click(object sender, EventArgs e)
         {
             btnDownloadEditor.Enabled = false;
+            lblTotalTime.Text = "";
+            pbar.Position = 0;
 
             if (!int.TryParse(txtDownloadCount.Text, out var num))
                 num = 4;
@@ -340,7 +342,7 @@ namespace UnityDownloader
                 }
 
                 var path = Path.Combine(directory, editorComponent.FileName);
-               
+
                 var sw = Stopwatch.StartNew();
                 ShowMessage($"开始从 {editorComponent.DownloadUrl} 下载到 {path}");
                 DownloadFileAsync(editorComponent.DownloadUrl, path, dpce =>
@@ -351,11 +353,12 @@ namespace UnityDownloader
                     view.RefreshData();
 
                     //ShowMessage($"下载总进度:{dict.Values.Sum(i => i.Item1) / (rows.Length * 100)},总耗时:{TimeSpan.FromSeconds(dict.Values.Sum(i => i.Item2.TotalSeconds))}");
-                }, ace =>
-                {
-                    sw.Stop();
-                });
+
+                    lblTotalTime.Text = TimeSpan.FromSeconds(dict.Values.Sum(i => i.Item2.TotalSeconds)).ToString();
+                    pbar.Position = dict.Values.Sum(i => i.Item1) / (rows.Length);
+                }, ace => { sw.Stop(); });
             }
+
             Invoke(() => { btnDownloadEditor.Enabled = true; });
         }
 
