@@ -31,6 +31,8 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             splitContainerControl1 = new DevExpress.XtraEditors.SplitContainerControl();
             groupControl1 = new DevExpress.XtraEditors.GroupControl();
+            lblTotalTime = new DevExpress.XtraEditors.LabelControl();
+            pbar = new DevExpress.XtraEditors.ProgressBarControl();
             btnOpenDirectory = new DevExpress.XtraEditors.SimpleButton();
             txtSelector = new DevExpress.XtraEditors.TextEdit();
             labelControl5 = new DevExpress.XtraEditors.LabelControl();
@@ -48,8 +50,6 @@
             gridControl = new DevExpress.XtraGrid.GridControl();
             gridView = new DevExpress.XtraGrid.Views.Grid.GridView();
             memTxt = new DevExpress.XtraEditors.MemoEdit();
-            pbar = new DevExpress.XtraEditors.ProgressBarControl();
-            lblTotalTime = new DevExpress.XtraEditors.LabelControl();
             ((System.ComponentModel.ISupportInitialize)splitContainerControl1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)splitContainerControl1.Panel1).BeginInit();
             splitContainerControl1.Panel1.SuspendLayout();
@@ -58,6 +58,7 @@
             splitContainerControl1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)groupControl1).BeginInit();
             groupControl1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)pbar.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)txtSelector.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)txtSaveDirectory.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)txtDownloadCount.Properties).BeginInit();
@@ -72,7 +73,6 @@
             ((System.ComponentModel.ISupportInitialize)gridControl).BeginInit();
             ((System.ComponentModel.ISupportInitialize)gridView).BeginInit();
             ((System.ComponentModel.ISupportInitialize)memTxt.Properties).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)pbar.Properties).BeginInit();
             SuspendLayout();
             // 
             // splitContainerControl1
@@ -118,6 +118,21 @@
             groupControl1.Size = new Size(1364, 183);
             groupControl1.TabIndex = 0;
             groupControl1.Text = "选项";
+            // 
+            // lblTotalTime
+            // 
+            lblTotalTime.Location = new Point(1140, 115);
+            lblTotalTime.Name = "lblTotalTime";
+            lblTotalTime.Size = new Size(0, 14);
+            lblTotalTime.TabIndex = 14;
+            // 
+            // pbar
+            // 
+            pbar.Location = new Point(727, 114);
+            pbar.Name = "pbar";
+            pbar.Properties.ShowTitle = true;
+            pbar.Size = new Size(405, 18);
+            pbar.TabIndex = 13;
             // 
             // btnOpenDirectory
             // 
@@ -270,20 +285,6 @@
             memTxt.Size = new Size(233, 775);
             memTxt.TabIndex = 0;
             // 
-            // pbar
-            // 
-            pbar.Location = new Point(727, 114);
-            pbar.Name = "pbar";
-            pbar.Size = new Size(405, 18);
-            pbar.TabIndex = 13;
-            // 
-            // lblTotalTime
-            // 
-            lblTotalTime.Location = new Point(1159, 116);
-            lblTotalTime.Name = "lblTotalTime";
-            lblTotalTime.Size = new Size(0, 14);
-            lblTotalTime.TabIndex = 14;
-            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 14F);
@@ -304,6 +305,7 @@
             ((System.ComponentModel.ISupportInitialize)groupControl1).EndInit();
             groupControl1.ResumeLayout(false);
             groupControl1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)pbar.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)txtSelector.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)txtSaveDirectory.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)txtDownloadCount.Properties).EndInit();
@@ -318,7 +320,6 @@
             ((System.ComponentModel.ISupportInitialize)gridControl).EndInit();
             ((System.ComponentModel.ISupportInitialize)gridView).EndInit();
             ((System.ComponentModel.ISupportInitialize)memTxt.Properties).EndInit();
-            ((System.ComponentModel.ISupportInitialize)pbar.Properties).EndInit();
             ResumeLayout(false);
         }
 
