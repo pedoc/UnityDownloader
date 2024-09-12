@@ -114,7 +114,7 @@ namespace UnityDownloader
 
                         dict[version] = new
                         {
-                            releaseDate =(await releaseDate.GetInnerTextAsync()),
+                            releaseDate = (await releaseDate.GetInnerTextAsync()),
 
                             linux =
                                 $"https://download.unity3d.com/download_unity/{hash}/LinuxEditorInstaller/Unity.tar.xz",
@@ -327,6 +327,7 @@ namespace UnityDownloader
             }
 
             ShowMessage($"当前选中了 {rows.Length} 项准备下载");
+            var dict = new Dictionary<int, (int, TimeSpan)>();
             Parallel.ForEachAsync(rows, new ParallelOptions()
             {
                 MaxDegreeOfParallelism = num
@@ -347,8 +348,13 @@ namespace UnityDownloader
                 ShowMessage($"开始从 {editorComponent.DownloadUrl} 下载到 {path}");
                 DownloadFileAsync(editorComponent.DownloadUrl, path, dpce =>
                 {
+                    dict[i] = (dpce.ProgressPercentage, sw.Elapsed);
                     editorComponent.DownloadProgress = $"{dpce.ProgressPercentage}%,{sw.Elapsed}";
                     view.RefreshRow(i);
+                    view.RefreshData();
+
+                    ShowMessage(
+                        $"下载总进度:{dict.Values.Sum(i => i.Item1) / (rows.Length * 100)},总耗时:{TimeSpan.FromSeconds(dict.Values.Sum(i => i.Item2.TotalSeconds))}");
                 }, ace =>
                 {
                     sw.Stop();
@@ -357,6 +363,11 @@ namespace UnityDownloader
                 });
                 mre.WaitOne();
             }).ContinueWith((t) => { Invoke(() => { btnDownloadEditor.Enabled = true; }); });
+        }
+
+        private void btnOpenDirectory_Click(object sender, EventArgs e)
+        {
+            Process.Start("explorer", txtSaveDirectory.Text.Trim());
         }
     }
 }

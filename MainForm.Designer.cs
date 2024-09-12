@@ -31,6 +31,8 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             splitContainerControl1 = new DevExpress.XtraEditors.SplitContainerControl();
             groupControl1 = new DevExpress.XtraEditors.GroupControl();
+            txtSelector = new DevExpress.XtraEditors.TextEdit();
+            labelControl5 = new DevExpress.XtraEditors.LabelControl();
             txtSaveDirectory = new DevExpress.XtraEditors.TextEdit();
             labelControl4 = new DevExpress.XtraEditors.LabelControl();
             btnDownloadEditor = new DevExpress.XtraEditors.SimpleButton();
@@ -45,8 +47,7 @@
             gridControl = new DevExpress.XtraGrid.GridControl();
             gridView = new DevExpress.XtraGrid.Views.Grid.GridView();
             memTxt = new DevExpress.XtraEditors.MemoEdit();
-            labelControl5 = new DevExpress.XtraEditors.LabelControl();
-            txtSelector = new DevExpress.XtraEditors.TextEdit();
+            btnOpenDirectory = new DevExpress.XtraEditors.SimpleButton();
             ((System.ComponentModel.ISupportInitialize)splitContainerControl1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)splitContainerControl1.Panel1).BeginInit();
             splitContainerControl1.Panel1.SuspendLayout();
@@ -55,6 +56,7 @@
             splitContainerControl1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)groupControl1).BeginInit();
             groupControl1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)txtSelector.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)txtSaveDirectory.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)txtDownloadCount.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)txtEditorJson.Properties).BeginInit();
@@ -68,7 +70,6 @@
             ((System.ComponentModel.ISupportInitialize)gridControl).BeginInit();
             ((System.ComponentModel.ISupportInitialize)gridView).BeginInit();
             ((System.ComponentModel.ISupportInitialize)memTxt.Properties).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)txtSelector.Properties).BeginInit();
             SuspendLayout();
             // 
             // splitContainerControl1
@@ -93,6 +94,7 @@
             // 
             // groupControl1
             // 
+            groupControl1.Controls.Add(btnOpenDirectory);
             groupControl1.Controls.Add(txtSelector);
             groupControl1.Controls.Add(labelControl5);
             groupControl1.Controls.Add(txtSaveDirectory);
@@ -111,6 +113,22 @@
             groupControl1.Size = new Size(1364, 183);
             groupControl1.TabIndex = 0;
             groupControl1.Text = "选项";
+            // 
+            // txtSelector
+            // 
+            txtSelector.EditValue = "body > div.flex.min-h-screen.flex-col > main > div.relative.flex.flex-wrap.justify-center.gap-2.p-2 > button";
+            txtSelector.Location = new Point(727, 81);
+            txtSelector.Name = "txtSelector";
+            txtSelector.Size = new Size(495, 20);
+            txtSelector.TabIndex = 11;
+            // 
+            // labelControl5
+            // 
+            labelControl5.Location = new Point(652, 84);
+            labelControl5.Name = "labelControl5";
+            labelControl5.Size = new Size(36, 14);
+            labelControl5.TabIndex = 10;
+            labelControl5.Text = "选择器";
             // 
             // txtSaveDirectory
             // 
@@ -238,21 +256,14 @@
             memTxt.Size = new Size(233, 775);
             memTxt.TabIndex = 0;
             // 
-            // labelControl5
+            // btnOpenDirectory
             // 
-            labelControl5.Location = new Point(652, 84);
-            labelControl5.Name = "labelControl5";
-            labelControl5.Size = new Size(36, 14);
-            labelControl5.TabIndex = 10;
-            labelControl5.Text = "选择器";
-            // 
-            // txtSelector
-            // 
-            txtSelector.EditValue = "body > div.flex.min-h-screen.flex-col > main > div.relative.flex.flex-wrap.justify-center.gap-2.p-2 > button";
-            txtSelector.Location = new Point(727, 81);
-            txtSelector.Name = "txtSelector";
-            txtSelector.Size = new Size(495, 20);
-            txtSelector.TabIndex = 11;
+            btnOpenDirectory.Location = new Point(365, 143);
+            btnOpenDirectory.Name = "btnOpenDirectory";
+            btnOpenDirectory.Size = new Size(75, 23);
+            btnOpenDirectory.TabIndex = 12;
+            btnOpenDirectory.Text = "打开目录";
+            btnOpenDirectory.Click += btnOpenDirectory_Click;
             // 
             // MainForm
             // 
@@ -274,6 +285,7 @@
             ((System.ComponentModel.ISupportInitialize)groupControl1).EndInit();
             groupControl1.ResumeLayout(false);
             groupControl1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)txtSelector.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)txtSaveDirectory.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)txtDownloadCount.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)txtEditorJson.Properties).EndInit();
@@ -287,7 +299,6 @@
             ((System.ComponentModel.ISupportInitialize)gridControl).EndInit();
             ((System.ComponentModel.ISupportInitialize)gridView).EndInit();
             ((System.ComponentModel.ISupportInitialize)memTxt.Properties).EndInit();
-            ((System.ComponentModel.ISupportInitialize)txtSelector.Properties).EndInit();
             ResumeLayout(false);
         }
 
@@ -311,5 +322,6 @@
         private DevExpress.XtraGrid.Views.Grid.GridView gridView;
         private DevExpress.XtraEditors.TextEdit txtSelector;
         private DevExpress.XtraEditors.LabelControl labelControl5;
+        private DevExpress.XtraEditors.SimpleButton btnOpenDirectory;
     }
 }
