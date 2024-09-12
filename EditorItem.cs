@@ -15,6 +15,8 @@ public class EditorItem
     public List<EditorComponent> Mac { get; set; }
     public List<EditorComponent> MacArm64 { get; set; }
 
+    public string ReleaseDate { get; set; }
+
 
     public void FillWin64EditorComponent()
     {

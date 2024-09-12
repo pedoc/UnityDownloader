@@ -45,6 +45,8 @@
             gridControl = new DevExpress.XtraGrid.GridControl();
             gridView = new DevExpress.XtraGrid.Views.Grid.GridView();
             memTxt = new DevExpress.XtraEditors.MemoEdit();
+            labelControl5 = new DevExpress.XtraEditors.LabelControl();
+            txtSelector = new DevExpress.XtraEditors.TextEdit();
             ((System.ComponentModel.ISupportInitialize)splitContainerControl1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)splitContainerControl1.Panel1).BeginInit();
             splitContainerControl1.Panel1.SuspendLayout();
@@ -66,6 +68,7 @@
             ((System.ComponentModel.ISupportInitialize)gridControl).BeginInit();
             ((System.ComponentModel.ISupportInitialize)gridView).BeginInit();
             ((System.ComponentModel.ISupportInitialize)memTxt.Properties).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)txtSelector.Properties).BeginInit();
             SuspendLayout();
             // 
             // splitContainerControl1
@@ -90,6 +93,8 @@
             // 
             // groupControl1
             // 
+            groupControl1.Controls.Add(txtSelector);
+            groupControl1.Controls.Add(labelControl5);
             groupControl1.Controls.Add(txtSaveDirectory);
             groupControl1.Controls.Add(labelControl4);
             groupControl1.Controls.Add(btnDownloadEditor);
@@ -153,7 +158,7 @@
             // 
             // txtEditorJson
             // 
-            txtEditorJson.EditValue = "https://raw.githubusercontent.com/neogeek/get-unity/main/data/editor-installers.json";
+            txtEditorJson.EditValue = "https://unity3d.com/get-unity/download/archive";
             txtEditorJson.Location = new Point(122, 81);
             txtEditorJson.Name = "txtEditorJson";
             txtEditorJson.Size = new Size(495, 20);
@@ -233,6 +238,22 @@
             memTxt.Size = new Size(233, 775);
             memTxt.TabIndex = 0;
             // 
+            // labelControl5
+            // 
+            labelControl5.Location = new Point(652, 84);
+            labelControl5.Name = "labelControl5";
+            labelControl5.Size = new Size(36, 14);
+            labelControl5.TabIndex = 10;
+            labelControl5.Text = "选择器";
+            // 
+            // txtSelector
+            // 
+            txtSelector.EditValue = "body > div.flex.min-h-screen.flex-col > main > div.relative.flex.flex-wrap.justify-center.gap-2.p-2 > button";
+            txtSelector.Location = new Point(727, 81);
+            txtSelector.Name = "txtSelector";
+            txtSelector.Size = new Size(495, 20);
+            txtSelector.TabIndex = 11;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 14F);
@@ -266,6 +287,7 @@
             ((System.ComponentModel.ISupportInitialize)gridControl).EndInit();
             ((System.ComponentModel.ISupportInitialize)gridView).EndInit();
             ((System.ComponentModel.ISupportInitialize)memTxt.Properties).EndInit();
+            ((System.ComponentModel.ISupportInitialize)txtSelector.Properties).EndInit();
             ResumeLayout(false);
         }
 
@@ -287,5 +309,7 @@
         private DevExpress.XtraEditors.LabelControl labelControl4;
         private DevExpress.XtraGrid.GridControl gridControl;
         private DevExpress.XtraGrid.Views.Grid.GridView gridView;
+        private DevExpress.XtraEditors.TextEdit txtSelector;
+        private DevExpress.XtraEditors.LabelControl labelControl5;
     }
 }

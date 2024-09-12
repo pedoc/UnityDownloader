@@ -51,7 +51,7 @@ namespace UnityDownloader
 
         private async Task<bool> GenerateEditorJsonFileAsync()
         {
-            const string url = "https://unity3d.com/get-unity/download/archive";
+            //const string url = "https://unity3d.com/get-unity/download/archive";
             // var html = DownloadContent(url);
             // if (string.IsNullOrEmpty(html))
             // {
@@ -63,36 +63,48 @@ namespace UnityDownloader
             {
                 WebProxy = new WebProxy(txtProxy.Text.Trim())
             };
-            await browserFetcher.DownloadAsync();
+            var installedBrowser = await browserFetcher.DownloadAsync();
             await using var browser = await Puppeteer.LaunchAsync(
                 new LaunchOptions
                 {
-                    Headless = true,
-                    IgnoreHTTPSErrors = true,
+                    Headless = false,
                     Args = new[]
                     {
                         "--proxy-server=\"" + txtProxy.Text.Trim() + "\""
                     }
                 });
             await using var page = await browser.NewPageAsync();
-            await page.GoToAsync(url, new NavigationOptions()
+            await page.SetUserAgentAsync(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0");
+            await page.GoToAsync(txtEditorJson.Text.Trim(), WaitUntilNavigation.DOMContentLoaded);
+
+            var elements = await page.QuerySelectorAllAsync(txtSelector.Text.Trim());
+            if (elements.Length <= 0)
             {
-                WaitUntil = [WaitUntilNavigation.DOMContentLoaded]
-            });
-            var elements = await page.QuerySelectorAllAsync(
-                "body > div.flex.min-h-screen.flex-col > main > div.relative.flex.flex-wrap.justify-center.gap-2.p-2 >button ");
+                ShowMessage("未抓取到任何有效元素,请调整选择器");
+                return false;
+            }
+
             var dict = new Dictionary<string, object>();
             foreach (var elementHandle in elements)
             {
                 await elementHandle.ClickAsync();
+                await Task.Delay(TimeSpan.FromSeconds(1));
 
-                var downloadElements = await page.QuerySelectorAllAsync("a[href^=\"unityhub://\"]");
-                foreach (var downloadElement in downloadElements)
+                var tableElement = await page.QuerySelectorAsync("table");
+                if (tableElement == null) continue;
+                var trElements = await tableElement.QuerySelectorAllAsync("tbody>tr");
+                foreach (var trElement in trElements)
                 {
+                    var downloadElement = await trElement.QuerySelectorAsync("a[href^=\"unityhub://\"");
+                    if (downloadElement == null) continue;
                     var href = await downloadElement.GetPropertyAsync("href");
                     if (href == null) continue;
                     var hrefString = href.ToString();
                     if (string.IsNullOrEmpty(hrefString)) continue;
+
+                    var releaseDate = await trElement.QuerySelectorAsync("td:nth-child(2) > div > span");
+
                     var match = Regex.Match(hrefString, "unityhub://(?<version>.*)/(?<hash>.*)", RegexOptions.Compiled,
                         TimeSpan.FromSeconds(3));
                     if (match.Success)
@@ -102,6 +114,8 @@ namespace UnityDownloader
 
                         dict[version] = new
                         {
+                            releaseDate =(await releaseDate.GetInnerTextAsync()),
+
                             linux =
                                 $"https://download.unity3d.com/download_unity/{hash}/LinuxEditorInstaller/Unity.tar.xz",
                             mac =
@@ -147,37 +161,40 @@ namespace UnityDownloader
                         MacArm64 = new List<EditorComponent>(),
                         Win64 = new List<EditorComponent>(),
                     };
-                    foreach (var (plat, editorUrl) in items)
+                    foreach (var (key, value) in items)
                     {
-                        switch (plat.ToLower())
+                        switch (key.ToLower())
                         {
                             case "linux":
                                 editorItem.Linux.Add(new EditorComponent()
                                 {
                                     Name = "UnityEditor",
-                                    DownloadUrl = editorUrl,
+                                    DownloadUrl = value,
                                 });
                                 break;
                             case "mac":
                                 editorItem.Mac.Add(new EditorComponent()
                                 {
                                     Name = "UnityEditor",
-                                    DownloadUrl = editorUrl,
+                                    DownloadUrl = value,
                                 });
                                 break;
                             case "macarm64":
                                 editorItem.MacArm64.Add(new EditorComponent()
                                 {
                                     Name = "UnityEditor",
-                                    DownloadUrl = editorUrl,
+                                    DownloadUrl = value,
                                 });
                                 break;
                             case "win64":
                                 editorItem.Win64.Add(new EditorComponent()
                                 {
                                     Name = "UnityEditor",
-                                    DownloadUrl = editorUrl,
+                                    DownloadUrl = value,
                                 });
+                                break;
+                            case "releasedate":
+                                editorItem.ReleaseDate = value;
                                 break;
                             default: continue;
                         }
@@ -268,14 +285,22 @@ namespace UnityDownloader
             //     ShowMessage("编辑器资源下载成功并完成加载");
             // });
 
-            if (await GenerateEditorJsonFileAsync())
+            btnDownloadEditorJson.Enabled = false;
+            try
             {
-                TryLoadEditorJson();
-                ShowMessage("编辑器资源下载成功并完成加载");
+                if (await GenerateEditorJsonFileAsync())
+                {
+                    TryLoadEditorJson();
+                    ShowMessage("编辑器资源下载成功并完成加载");
+                }
+                else
+                {
+                    ShowMessage("编辑器资源下载失败");
+                }
             }
-            else
+            finally
             {
-                ShowMessage("编辑器资源下载失败");
+                btnDownloadEditorJson.Enabled = true;
             }
         }
 
