@@ -328,10 +328,7 @@ namespace UnityDownloader
 
             ShowMessage($"当前选中了 {rows.Length} 项准备下载");
             var dict = new Dictionary<int, (int, TimeSpan)>();
-            Parallel.ForEachAsync(rows, new ParallelOptions()
-            {
-                MaxDegreeOfParallelism = num
-            }, async (i, ct) =>
+            foreach (var i in rows)
             {
                 var editorComponent = view.GetRow(i) as EditorComponent;
                 if (editorComponent == null) return;
@@ -343,7 +340,7 @@ namespace UnityDownloader
                 }
 
                 var path = Path.Combine(directory, editorComponent.FileName);
-                var mre = new ManualResetEvent(false);
+               
                 var sw = Stopwatch.StartNew();
                 ShowMessage($"开始从 {editorComponent.DownloadUrl} 下载到 {path}");
                 DownloadFileAsync(editorComponent.DownloadUrl, path, dpce =>
@@ -353,16 +350,13 @@ namespace UnityDownloader
                     view.RefreshRow(i);
                     view.RefreshData();
 
-                    ShowMessage(
-                        $"下载总进度:{dict.Values.Sum(i => i.Item1) / (rows.Length * 100)},总耗时:{TimeSpan.FromSeconds(dict.Values.Sum(i => i.Item2.TotalSeconds))}");
+                    //ShowMessage($"下载总进度:{dict.Values.Sum(i => i.Item1) / (rows.Length * 100)},总耗时:{TimeSpan.FromSeconds(dict.Values.Sum(i => i.Item2.TotalSeconds))}");
                 }, ace =>
                 {
                     sw.Stop();
-                    //editorComponent.DownloadProgress = $"下载完成,{sw.Elapsed}";
-                    mre.Set();
                 });
-                mre.WaitOne();
-            }).ContinueWith((t) => { Invoke(() => { btnDownloadEditor.Enabled = true; }); });
+            }
+            Invoke(() => { btnDownloadEditor.Enabled = true; });
         }
 
         private void btnOpenDirectory_Click(object sender, EventArgs e)
