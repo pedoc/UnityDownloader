@@ -58,84 +58,102 @@ namespace UnityDownloader
             //     ShowMessage("拉取u3d版本列表失败," + url);
             //     return false;
             // }
-
-            var browserFetcher = new BrowserFetcher()
+            IBrowser browser = null;
+            IPage page = null;
+            try
             {
-                WebProxy = new WebProxy(txtProxy.Text.Trim())
-            };
-            var installedBrowser = await browserFetcher.DownloadAsync();
-            await using var browser = await Puppeteer.LaunchAsync(
-                new LaunchOptions
+                var browserFetcher = new BrowserFetcher()
                 {
-                    Headless = false,
-                    Args = new[]
+                    WebProxy = new WebProxy(txtProxy.Text.Trim())
+                };
+                var installedBrowser = await browserFetcher.DownloadAsync();
+                browser = await Puppeteer.LaunchAsync(
+                    new LaunchOptions
                     {
-                        "--proxy-server=\"" + txtProxy.Text.Trim() + "\""
-                    }
-                });
-            await using var page = await browser.NewPageAsync();
-            await page.SetUserAgentAsync(
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0");
-            await page.GoToAsync(txtEditorJson.Text.Trim(), WaitUntilNavigation.DOMContentLoaded);
-
-            var elements = await page.QuerySelectorAllAsync(txtSelector.Text.Trim());
-            if (elements.Length <= 0)
-            {
-                ShowMessage("未抓取到任何有效元素,请调整选择器");
-                return false;
-            }
-
-            var dict = new Dictionary<string, object>();
-            foreach (var elementHandle in elements)
-            {
-                await elementHandle.ClickAsync();
-                await Task.Delay(TimeSpan.FromSeconds(1));
-
-                var tableElement = await page.QuerySelectorAsync("table");
-                if (tableElement == null) continue;
-                var trElements = await tableElement.QuerySelectorAllAsync("tbody>tr");
-                foreach (var trElement in trElements)
-                {
-                    var downloadElement = await trElement.QuerySelectorAsync("a[href^=\"unityhub://\"");
-                    if (downloadElement == null) continue;
-                    var href = await downloadElement.GetPropertyAsync("href");
-                    if (href == null) continue;
-                    var hrefString = href.ToString();
-                    if (string.IsNullOrEmpty(hrefString)) continue;
-
-                    var releaseDate = await trElement.QuerySelectorAsync("td:nth-child(2) > div > span");
-
-                    var match = Regex.Match(hrefString, "unityhub://(?<version>.*)/(?<hash>.*)", RegexOptions.Compiled,
-                        TimeSpan.FromSeconds(3));
-                    if (match.Success)
-                    {
-                        var version = match.Groups["version"].Value;
-                        var hash = match.Groups["hash"].Value;
-
-                        dict[version] = new
+                        Headless = false,
+                        Args = new[]
                         {
-                            releaseDate = (await releaseDate.GetInnerTextAsync()),
+                            "--proxy-server=\"" + txtProxy.Text.Trim() + "\""
+                        }
+                    });
+                page = await browser.NewPageAsync();
+                await page.SetUserAgentAsync(
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0");
+                await page.GoToAsync(txtEditorJson.Text.Trim(), WaitUntilNavigation.DOMContentLoaded);
 
-                            linux =
-                                $"https://download.unity3d.com/download_unity/{hash}/LinuxEditorInstaller/Unity.tar.xz",
-                            mac =
-                                $"https://download.unity3d.com/download_unity/{hash}/MacEditorInstaller/Unity-{version}.pkg",
-                            macArm64 =
-                                $"https://download.unity3d.com/download_unity/{hash}/MacEditorInstallerArm64/Unity-{version}.pkg",
-                            win64 =
-                                $"https://download.unity3d.com/download_unity/{hash}/Windows64EditorInstaller/UnitySetup64-{version}.exe"
-                        };
+                var elements = await page.QuerySelectorAllAsync(txtSelector.Text.Trim());
+                if (elements.Length <= 0)
+                {
+                    ShowMessage("未抓取到任何有效元素,请调整选择器");
+                    return false;
+                }
+
+                var dict = new Dictionary<string, object>();
+                foreach (var elementHandle in elements)
+                {
+                    await elementHandle.ClickAsync();
+                    await Task.Delay(TimeSpan.FromSeconds(1));
+
+                    var tableElement = await page.QuerySelectorAsync("table");
+                    if (tableElement == null) continue;
+                    var trElements = await tableElement.QuerySelectorAllAsync("tbody>tr");
+                    foreach (var trElement in trElements)
+                    {
+                        var downloadElement = await trElement.QuerySelectorAsync("a[href^=\"unityhub://\"");
+                        if (downloadElement == null) continue;
+                        var href = await downloadElement.GetPropertyAsync("href");
+                        if (href == null) continue;
+                        var hrefString = href.ToString();
+                        if (string.IsNullOrEmpty(hrefString)) continue;
+
+                        var releaseDate = await trElement.QuerySelectorAsync("td:nth-child(2) > div > span");
+
+                        var match = Regex.Match(hrefString, "unityhub://(?<version>.*)/(?<hash>.*)",
+                            RegexOptions.Compiled,
+                            TimeSpan.FromSeconds(3));
+                        if (match.Success)
+                        {
+                            var version = match.Groups["version"].Value;
+                            var hash = match.Groups["hash"].Value;
+
+                            dict[version] = new
+                            {
+                                releaseDate = (await releaseDate.GetInnerTextAsync()),
+                                hash = hash,
+                                version = version,
+
+                                linux =
+                                    $"https://download.unity3d.com/download_unity/{hash}/LinuxEditorInstaller/Unity.tar.xz",
+                                mac =
+                                    $"https://download.unity3d.com/download_unity/{hash}/MacEditorInstaller/Unity-{version}.pkg",
+                                macArm64 =
+                                    $"https://download.unity3d.com/download_unity/{hash}/MacEditorInstallerArm64/Unity-{version}.pkg",
+                                win64 =
+                                    $"https://download.unity3d.com/download_unity/{hash}/Windows64EditorInstaller/UnitySetup64-{version}.exe"
+                            };
+                        }
                     }
                 }
+
+                var json = JsonConvert.SerializeObject(dict, Formatting.Indented);
+                await File.WriteAllTextAsync(EditorJSONFile, json);
+
+                await page.CloseAsync();
+                await browser.CloseAsync();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ShowMessage($"读取页面出错,详情:{ex.Message},堆栈:{ex.StackTrace}");
+            }
+            finally
+            {
+                await page?.CloseAsync();
+                await browser?.CloseAsync();
             }
 
-            var json = JsonConvert.SerializeObject(dict, Formatting.Indented);
-            await File.WriteAllTextAsync(EditorJSONFile, json);
-
-            await page.CloseAsync();
-            await browser.CloseAsync();
-
-            return true;
+            return false;
         }
 
         public void TryLoadEditorJson()
@@ -196,19 +214,35 @@ namespace UnityDownloader
                             case "releasedate":
                                 editorItem.ReleaseDate = value;
                                 break;
+                            case "hash":
+                                editorItem.Hash = value;
+                                break;
+                            case "version":
+                                editorItem.Version = value;
+                                break;
                             default: continue;
                         }
                     }
 
-                    var url = editorItem.Win64.First().DownloadUrl;
-                    editorItem.Hash = url.Replace("https://download.unity3d.com/download_unity/", "").Substring(0, 12);
+                    //如果没有hash则尝试从url中提取填充
+                    if (string.IsNullOrEmpty(editorItem.Hash))
+                    {
+                        var url = editorItem.Win64.First().DownloadUrl;
+                        editorItem.Hash = url.Replace("https://download.unity3d.com/download_unity/", "")
+                            .Substring(0, 12);
+                    }
+
                     editorItem.FillWin64EditorComponent();
+
+                    editorItem.FillMacOsEditorComponent();
+                    editorItem.FillMacOsArm64EditorComponent();
+                    editorItem.FillLinuxEditorComponent();
 
                     editorItems.Add(editorItem);
                 }
 
                 gridView.OptionsBehavior.ReadOnly = true;
-                gridView.OptionsBehavior.Editable = false;
+                //gridView.OptionsBehavior.Editable = false;
 
                 gridView.OptionsSelection.MultiSelect = true;
                 gridView.OptionsSelection.MultiSelectMode = GridMultiSelectMode.CheckBoxRowSelect;
