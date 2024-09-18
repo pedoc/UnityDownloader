@@ -364,6 +364,11 @@ namespace UnityDownloader
                 {
                     sw.Stop();
                     editorComponent.DownloadCompleted = ace.Error == null;
+
+                    if (editorComponent.DownloadCompleted)
+                    {
+                        editorComponent.DownloadProgress = 100;
+                    }
                 };
 
                 _ = downloader.DownloadFileTaskAsync(editorComponent.DownloadUrl, path);
