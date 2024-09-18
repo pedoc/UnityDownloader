@@ -163,4 +163,5 @@ public class EditorComponent
     public string Version { get; set; }
     public TimeSpan DownloadElapsed { get; set; }
     public bool DownloadCompleted { get; set; }
+    public long DownloadSize { get; set; }
 }

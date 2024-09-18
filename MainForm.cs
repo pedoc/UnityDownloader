@@ -349,8 +349,12 @@ namespace UnityDownloader
                         }
                     }
                 };
-            
+
                 var downloader = new DownloadService(downloadOpt);
+                downloader.DownloadStarted += (s, dpce) =>
+                {
+                    editorComponent.DownloadSize = dpce.TotalBytesToReceive / 1024 / 1024;
+                };
                 downloader.DownloadProgressChanged += (s, dpce) =>
                 {
                     editorComponent.DownloadProgress = dpce.ProgressPercentage;
