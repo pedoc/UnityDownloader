@@ -1,5 +1,3 @@
-﻿using System.IO;
-
 namespace UnityDownloader;
 
 public class EditorItem

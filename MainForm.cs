@@ -1,6 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.ComponentModel;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Net;
 using System.Text.RegularExpressions;
 using DevExpress.XtraEditors;
@@ -8,7 +6,6 @@ using DevExpress.XtraGrid.Views.Grid;
 using Downloader;
 using Newtonsoft.Json;
 using PuppeteerSharp;
-using DownloadProgressChangedEventArgs = System.Net.DownloadProgressChangedEventArgs;
 using Timer = System.Windows.Forms.Timer;
 
 // ReSharper disable AsyncApostle.ConfigureAwaitHighlighting
