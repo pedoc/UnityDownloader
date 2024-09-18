@@ -300,33 +300,24 @@ namespace UnityDownloader
 
             ShowMessage($"当前选中了 {rows.Length} 项准备下载");
 
-            var downloadOpt = new DownloadConfiguration()
-            {
-                ChunkCount = Math.Max(1, Environment.ProcessorCount - 1),
-                ParallelDownload = true,
-                RequestConfiguration =
-                {
-                    Proxy = new WebProxy()
-                    {
-                        BypassProxyOnLocal = true,
-                        Address = new Uri(txtProxy.Text.Trim())
-                    }
-                }
-            };
-            var downloader = new DownloadService(downloadOpt);
-
             var total = Stopwatch.StartNew();
 
             var timer = new Timer();
             timer.Interval = 1000;
             timer.Tick += (s, _) =>
             {
-                view.RefreshData();
-                
                 lblTotalTime.Text = total.ToString();
                 pbar.Position =
                     (int)rows.Select(r => ((EditorComponent)view.GetRow(r)).DownloadProgress).Sum() /
                     (rows.Length);
+
+                if (pbar.Position >= 100)
+                {
+                    total.Stop();
+                    timer.Stop();
+                }
+
+                view.RefreshData();
             };
             timer.Start();
 
@@ -345,6 +336,21 @@ namespace UnityDownloader
 
                 var sw = Stopwatch.StartNew();
                 ShowMessage($"开始从 {editorComponent.DownloadUrl} 下载到 {path}");
+                var downloadOpt = new DownloadConfiguration()
+                {
+                    ChunkCount = Math.Max(1, Environment.ProcessorCount - 1),
+                    ParallelDownload = true,
+                    RequestConfiguration =
+                    {
+                        Proxy = new WebProxy()
+                        {
+                            BypassProxyOnLocal = true,
+                            Address = new Uri(txtProxy.Text.Trim())
+                        }
+                    }
+                };
+            
+                var downloader = new DownloadService(downloadOpt);
                 downloader.DownloadProgressChanged += (s, dpce) =>
                 {
                     editorComponent.DownloadProgress = dpce.ProgressPercentage;
