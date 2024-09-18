@@ -18,6 +18,7 @@
     <PackageReference Include="DevExpress.Win.Design" Version="24.1.5" />
     <PackageReference Include="DevExpress.Win" Version="24.1.5" />
     <PackageReference Include="DevExpress.Win.BonusSkins" Version="24.1.5" />
+    <PackageReference Include="Downloader" Version="3.1.2" />
     <PackageReference Include="EmptyLicensesLicx" Version="3.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

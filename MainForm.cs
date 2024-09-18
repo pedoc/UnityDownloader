@@ -1,12 +1,15 @@
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
 using System.Net;
 using System.Text.RegularExpressions;
 using DevExpress.XtraEditors;
 using DevExpress.XtraGrid.Views.Grid;
+using Downloader;
 using Newtonsoft.Json;
 using PuppeteerSharp;
+using DownloadProgressChangedEventArgs = System.Net.DownloadProgressChangedEventArgs;
+using Timer = System.Windows.Forms.Timer;
 
 // ReSharper disable AsyncApostle.ConfigureAwaitHighlighting
 
@@ -35,19 +38,6 @@ namespace UnityDownloader
         }
 
         const string EditorJSONFile = "editor.json";
-
-        private void DownloadEditorJsonAsync(Action<AsyncCompletedEventArgs> downloadCompletedHandler)
-        {
-            var url = txtEditorJson.Text.Trim();
-            if (string.IsNullOrEmpty(url))
-            {
-                ShowMessage("编辑器资源不能为空");
-                return;
-            }
-
-            DownloadFileAsync(url, EditorJSONFile, args => { ShowMessage($"编辑器资源下载进度：{args.ProgressPercentage}%"); },
-                downloadCompletedHandler);
-        }
 
         private async Task<bool> GenerateEditorJsonFileAsync()
         {
@@ -257,60 +247,6 @@ namespace UnityDownloader
             }
         }
 
-        private string DownloadContent(
-            string url)
-        {
-            try
-            {
-                using WebClient wb = new WebClient();
-                if (!string.IsNullOrEmpty(txtProxy.Text))
-                {
-                    wb.Proxy = new WebProxy(txtProxy.Text);
-                }
-
-                return wb.DownloadString(new Uri(url));
-            }
-            catch (Exception e)
-            {
-                ShowMessage($"下载 {url} 时出错,原因:{e.Message}");
-                return string.Empty;
-            }
-        }
-
-        private void DownloadFileAsync(
-            string url,
-            string path,
-            Action<DownloadProgressChangedEventArgs> progressHandler,
-            Action<AsyncCompletedEventArgs> downloadCompletedHandler)
-        {
-            try
-            {
-                using WebClient wb = new WebClient();
-                if (!string.IsNullOrEmpty(txtProxy.Text))
-                {
-                    wb.Proxy = new WebProxy(txtProxy.Text);
-                }
-
-                wb.DownloadProgressChanged += (sender, args) =>
-                {
-                    //ShowMessage($"下载进度：{args.ProgressPercentage}%");
-                    progressHandler?.Invoke(args);
-                };
-                wb.DownloadFileCompleted += (sender, args) =>
-                {
-                    //ShowMessage("下载完成");
-                    downloadCompletedHandler?.Invoke(args);
-                };
-
-                wb.DownloadFileAsync(new Uri(url), path);
-            }
-            catch (Exception e)
-            {
-                ShowMessage($"下载 {url} 时出错,原因:{e.Message}");
-            }
-        }
-
-
         private async void btnDownloadEditorJson_Click(object sender, EventArgs e)
         {
             // DownloadEditorJsonAsync(_ =>
@@ -363,7 +299,37 @@ namespace UnityDownloader
             }
 
             ShowMessage($"当前选中了 {rows.Length} 项准备下载");
-            var dict = new Dictionary<int, (int, TimeSpan)>();
+
+            var downloadOpt = new DownloadConfiguration()
+            {
+                ChunkCount = Math.Max(1, Environment.ProcessorCount - 1),
+                ParallelDownload = true,
+                RequestConfiguration =
+                {
+                    Proxy = new WebProxy()
+                    {
+                        BypassProxyOnLocal = true,
+                        Address = new Uri(txtProxy.Text.Trim())
+                    }
+                }
+            };
+            var downloader = new DownloadService(downloadOpt);
+
+            var total = Stopwatch.StartNew();
+
+            var timer = new Timer();
+            timer.Interval = 1000;
+            timer.Tick += (s, _) =>
+            {
+                view.RefreshData();
+                
+                lblTotalTime.Text = total.ToString();
+                pbar.Position =
+                    (int)rows.Select(r => ((EditorComponent)view.GetRow(r)).DownloadProgress).Sum() /
+                    (rows.Length);
+            };
+            timer.Start();
+
             foreach (var i in rows)
             {
                 var editorComponent = view.GetRow(i) as EditorComponent;
@@ -379,18 +345,18 @@ namespace UnityDownloader
 
                 var sw = Stopwatch.StartNew();
                 ShowMessage($"开始从 {editorComponent.DownloadUrl} 下载到 {path}");
-                DownloadFileAsync(editorComponent.DownloadUrl, path, dpce =>
+                downloader.DownloadProgressChanged += (s, dpce) =>
                 {
-                    dict[i] = (dpce.ProgressPercentage, sw.Elapsed);
-                    editorComponent.DownloadProgress = $"{dpce.ProgressPercentage}%,{sw.Elapsed}";
-                    view.RefreshRow(i);
-                    view.RefreshData();
+                    editorComponent.DownloadProgress = dpce.ProgressPercentage;
+                    editorComponent.DownloadElapsed = sw.Elapsed;
+                };
+                downloader.DownloadFileCompleted += (s, ace) =>
+                {
+                    sw.Stop();
+                    editorComponent.DownloadCompleted = ace.Error == null;
+                };
 
-                    //ShowMessage($"下载总进度:{dict.Values.Sum(i => i.Item1) / (rows.Length * 100)},总耗时:{TimeSpan.FromSeconds(dict.Values.Sum(i => i.Item2.TotalSeconds))}");
-
-                    lblTotalTime.Text = TimeSpan.FromSeconds(dict.Values.Sum(i => i.Item2.TotalSeconds)).ToString();
-                    pbar.Position = dict.Values.Sum(i => i.Item1) / (rows.Length);
-                }, ace => { sw.Stop(); });
+                _ = downloader.DownloadFileTaskAsync(editorComponent.DownloadUrl, path);
             }
 
             Invoke(() => { btnDownloadEditor.Enabled = true; });

@@ -159,6 +159,8 @@ public class EditorComponent
 
     public string DownloadUrl { get; set; }
 
-    public string DownloadProgress { get; set; } = "";
+    public double DownloadProgress { get; set; } 
     public string Version { get; set; }
+    public TimeSpan DownloadElapsed { get; set; }
+    public bool DownloadCompleted { get; set; }
 }
