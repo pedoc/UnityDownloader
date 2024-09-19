@@ -1,4 +1,4 @@
-﻿namespace UnityDownloader
+namespace UnityDownloader
 {
     partial class MainForm
     {
@@ -31,6 +31,7 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             splitContainerControl1 = new DevExpress.XtraEditors.SplitContainerControl();
             groupControl1 = new DevExpress.XtraEditors.GroupControl();
+            cbxHub = new DevExpress.XtraEditors.ComboBoxEdit();
             lblTotalTime = new DevExpress.XtraEditors.LabelControl();
             pbar = new DevExpress.XtraEditors.ProgressBarControl();
             btnOpenDirectory = new DevExpress.XtraEditors.SimpleButton();
@@ -58,6 +59,7 @@
             splitContainerControl1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)groupControl1).BeginInit();
             groupControl1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)cbxHub.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pbar.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)txtSelector.Properties).BeginInit();
             ((System.ComponentModel.ISupportInitialize)txtSaveDirectory.Properties).BeginInit();
@@ -97,6 +99,7 @@
             // 
             // groupControl1
             // 
+            groupControl1.Controls.Add(cbxHub);
             groupControl1.Controls.Add(lblTotalTime);
             groupControl1.Controls.Add(pbar);
             groupControl1.Controls.Add(btnOpenDirectory);
@@ -119,6 +122,17 @@
             groupControl1.TabIndex = 0;
             groupControl1.Text = "选项";
             // 
+            // cbxHub
+            // 
+            cbxHub.Location = new Point(514, 144);
+            cbxHub.Name = "cbxHub";
+            cbxHub.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] { new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo) });
+            cbxHub.Properties.Items.AddRange(new object[] { "None", "Windows", "Mac", "Linux" });
+            cbxHub.Properties.TextEditStyle = DevExpress.XtraEditors.Controls.TextEditStyles.DisableTextEditor;
+            cbxHub.Size = new Size(75, 20);
+            cbxHub.TabIndex = 15;
+            cbxHub.SelectedValueChanged += cbxHub_SelectedValueChanged;
+            // 
             // lblTotalTime
             // 
             lblTotalTime.Location = new Point(1140, 115);
@@ -133,10 +147,11 @@
             pbar.Properties.ShowTitle = true;
             pbar.Size = new Size(405, 18);
             pbar.TabIndex = 13;
+            pbar.DoubleClick += pbar_DoubleClick;
             // 
             // btnOpenDirectory
             // 
-            btnOpenDirectory.Location = new Point(365, 143);
+            btnOpenDirectory.Location = new Point(383, 143);
             btnOpenDirectory.Name = "btnOpenDirectory";
             btnOpenDirectory.Size = new Size(75, 23);
             btnOpenDirectory.TabIndex = 12;
@@ -177,7 +192,7 @@
             // 
             // btnDownloadEditor
             // 
-            btnDownloadEditor.Location = new Point(242, 143);
+            btnDownloadEditor.Location = new Point(252, 143);
             btnDownloadEditor.Name = "btnDownloadEditor";
             btnDownloadEditor.Size = new Size(75, 23);
             btnDownloadEditor.TabIndex = 7;
@@ -305,6 +320,7 @@
             ((System.ComponentModel.ISupportInitialize)groupControl1).EndInit();
             groupControl1.ResumeLayout(false);
             groupControl1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)cbxHub.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)pbar.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)txtSelector.Properties).EndInit();
             ((System.ComponentModel.ISupportInitialize)txtSaveDirectory.Properties).EndInit();
@@ -346,5 +362,6 @@
         private DevExpress.XtraEditors.SimpleButton btnOpenDirectory;
         private DevExpress.XtraEditors.LabelControl lblTotalTime;
         private DevExpress.XtraEditors.ProgressBarControl pbar;
+        private DevExpress.XtraEditors.ComboBoxEdit cbxHub;
     }
 }

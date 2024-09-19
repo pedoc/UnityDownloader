@@ -121,4 +121,7 @@
   <data name="unity_editor" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\unity_editor.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="Unity_lic" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Unity_lic.ulf;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
 </root>

@@ -69,5 +69,27 @@ namespace UnityDownloader.Properties {
                 return ((System.Drawing.Icon)(obj));
             }
         }
+        
+        /// <summary>
+        ///   查找类似 &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+        ///&lt;root&gt;
+        ///    &lt;License id=&quot;Terms&quot;&gt;
+        ///        &lt;NoHardwareCheck Value=&quot;true&quot;/&gt;
+        ///        &lt;MachineBindings&gt;
+        ///            &lt;Binding Key=&quot;1&quot; Value=&quot;00000000-0000-0000-0000-000000000000&quot;/&gt;
+        ///            &lt;Binding Key=&quot;2&quot; Value=&quot;000000000000&quot;/&gt;
+        ///        &lt;/MachineBindings&gt;
+        ///        &lt;SerialHash Value=&quot;0000000000000000000000000000000000000000&quot;/&gt;
+        ///        &lt;Features&gt;
+        ///            &lt;Feature Value=&quot;0&quot;/&gt;
+        ///            &lt;Feature Value=&quot;1&quot;/&gt;
+        ///            &lt;Feature Value=&quot;2&quot;/&gt;
+        ///            &lt;Feature Value=&quot;3&quot;/ [字符串的其余部分被截断]&quot;; 的本地化字符串。
+        /// </summary>
+        internal static string Unity_lic {
+            get {
+                return ResourceManager.GetString("Unity_lic", resourceCulture);
+            }
+        }
     }
 }

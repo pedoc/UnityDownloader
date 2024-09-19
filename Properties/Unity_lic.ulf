@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+    <License id="Terms">
+        <NoHardwareCheck Value="true"/>
+        <MachineBindings>
+            <Binding Key="1" Value="00000000-0000-0000-0000-000000000000"/>
+            <Binding Key="2" Value="000000000000"/>
+        </MachineBindings>
+        <SerialHash Value="0000000000000000000000000000000000000000"/>
+        <Features>
+            <Feature Value="0"/>
+            <Feature Value="1"/>
+            <Feature Value="2"/>
+            <Feature Value="3"/>
+            <Feature Value="4"/>
+            <Feature Value="5"/>
+            <Feature Value="6"/>
+            <Feature Value="9"/>
+            <Feature Value="10"/>
+            <Feature Value="11"/>
+            <Feature Value="12"/>
+            <Feature Value="13"/>
+            <Feature Value="14"/>
+            <Feature Value="15"/>
+            <Feature Value="17"/>
+            <Feature Value="18"/>
+            <Feature Value="19"/>
+            <Feature Value="20"/>
+            <Feature Value="21"/>
+            <Feature Value="22"/>
+            <Feature Value="30"/>
+            <Feature Value="31"/>
+            <Feature Value="32"/>
+            <Feature Value="33"/>
+            <Feature Value="34"/>
+            <Feature Value="35"/>
+            <Feature Value="36"/>
+            <Feature Value="39"/>
+            <Feature Value="40"/>
+            <Feature Value="41"/>
+            <Feature Value="42"/>
+            <Feature Value="43"/>
+            <Feature Value="44"/>
+            <Feature Value="45"/>
+            <Feature Value="46"/>
+            <Feature Value="47"/>
+            <Feature Value="48"/>
+            <Feature Value="49"/>
+            <Feature Value="50"/>
+            <Feature Value="51"/>
+            <Feature Value="52"/>
+            <Feature Value="53"/>
+            <Feature Value="54"/>
+            <Feature Value="55"/>
+            <Feature Value="56"/>
+            <Feature Value="57"/>
+            <Feature Value="58"/>
+            <Feature Value="59"/>
+            <Feature Value="60"/>
+            <Feature Value="65"/>
+        </Features>
+        <InitialActivationDate Value="2023-08-25T12:00:00"/>
+        <DeveloperData Value="AQAAADAwLTAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMA=="/>
+        <SerialMasked Value="00-0000-0000-0000-0000-XXXX"/>
+        <LicenseVersion Value="6.x"/>
+        <ClientProvidedVersion Value="2017.2.0"/>
+        <AlwaysOnline Value="false"/>
+    </License>
+    <Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
+        <SignedInfo xmlns="http://www.w3.org/2000/09/xmldsig#">
+            <CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315#WithComments"/>
+            <SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/>
+            <Reference URI="#Terms">
+                <Transforms>
+                    <Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/>
+                </Transforms>
+                <DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/>
+                <DigestValue>PVVEdchvy+1qWbFrlsebc1IQ+NA=</DigestValue>
+            </Reference>
+        </SignedInfo>
+        <SignatureValue>uyXeTnqIFkFnamORjPA1wqMd2J38zvR3+ix0w/v8MpLO45jVBU/MAb0kO0us/ZelPBh02j405YB06JQnjNM1e0ShebN4djrzvUKDmmnRypHD1m0eLcw2gb+TIm7Fehh2RXR5wQTXnaPlL0Brv0cid0t3F5rQlUDazy8Ip5s3xBM8BYSxgCZ0DJDuAzamsPlmmTV1+NH7QQH1IGSzxFqYpi/MSLfOPuplzgX/iumpHAqXFmYOH3Sco6tUJUfaKNTC2Im3LdK3PF3B9CwtLNavQnrpw3X4Xq0C3FPwqgslShHMj3GuDYOIMU6cEDOyM0JIA/kEpsVIkdqtK4ns6SepXg==</SignatureValue>
+    </Signature>
+</root>
