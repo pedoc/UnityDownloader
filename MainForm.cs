@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Net;
 using System.Text.RegularExpressions;
 using DevExpress.XtraEditors;
@@ -6,6 +6,7 @@ using DevExpress.XtraGrid.Views.Grid;
 using Downloader;
 using Newtonsoft.Json;
 using PuppeteerSharp;
+using Serilog;
 using Timer = System.Windows.Forms.Timer;
 
 // ReSharper disable AsyncApostle.ConfigureAwaitHighlighting
@@ -31,6 +32,8 @@ public partial class MainForm : XtraForm
         else
         {
             memTxt.Text += msg + Environment.NewLine;
+
+            Log.Logger.Information(msg);
         }
     }
 
@@ -283,19 +286,22 @@ public partial class MainForm : XtraForm
         pbar.Position = 0;
 
         if (!int.TryParse(txtDownloadCount.Text, out var num))
+        {
             num = 4;
+        }
 
         var view = gridControl.FocusedView as GridView;
         if (view == null) return;
 
         var rows = view.GetSelectedRows();
-        if (rows.Length <= 0)
+        var totalDownloadTaskCount = rows.Length;
+        if (totalDownloadTaskCount <= 0)
         {
             ShowMessage("请先选择要下载的项");
             return;
         }
 
-        ShowMessage($"当前选中了 {rows.Length} 项准备下载");
+        ShowMessage($"当前选中了 {totalDownloadTaskCount} 项准备下载");
 
         var total = Stopwatch.StartNew();
 
@@ -308,7 +314,8 @@ public partial class MainForm : XtraForm
                 (int)rows.Select(r => ((EditorComponent)view.GetRow(r)).DownloadProgress).Sum() /
                 (rows.Length);
 
-            if (pbar.Position >= 100)
+
+            if (Volatile.Read(ref totalDownloadTaskCount) <= 0)
             {
                 total.Stop();
                 timer.Stop();
@@ -317,6 +324,7 @@ public partial class MainForm : XtraForm
             view.RefreshData();
         };
         timer.Start();
+
 
         foreach (var i in rows)
         {
@@ -337,6 +345,7 @@ public partial class MainForm : XtraForm
             {
                 ChunkCount = Math.Max(1, Environment.ProcessorCount - 1),
                 ParallelDownload = true,
+                ParallelCount = num,
                 RequestConfiguration =
                 {
                     Proxy = new WebProxy()
@@ -366,6 +375,8 @@ public partial class MainForm : XtraForm
                 {
                     editorComponent.DownloadProgress = 100;
                 }
+
+                Interlocked.Decrement(ref totalDownloadTaskCount);
             };
 
             _ = downloader.DownloadFileTaskAsync(editorComponent.DownloadUrl, path);
