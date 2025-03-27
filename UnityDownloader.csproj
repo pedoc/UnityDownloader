@@ -8,7 +8,7 @@
     <UseWPF>False</UseWPF>
     <StartupObject>UnityDownloader.Program</StartupObject>
     <ApplicationIcon>unity_editor.ico</ApplicationIcon>
-    <AssemblyVersion>2.0.0</AssemblyVersion>
+    <AssemblyVersion>3.0.0</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>
