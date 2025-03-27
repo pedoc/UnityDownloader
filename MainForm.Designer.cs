@@ -51,6 +51,7 @@ namespace UnityDownloader
             gridControl = new DevExpress.XtraGrid.GridControl();
             gridView = new DevExpress.XtraGrid.Views.Grid.GridView();
             memTxt = new DevExpress.XtraEditors.MemoEdit();
+            btnManualUpdate = new DevExpress.XtraEditors.SimpleButton();
             ((System.ComponentModel.ISupportInitialize)splitContainerControl1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)splitContainerControl1.Panel1).BeginInit();
             splitContainerControl1.Panel1.SuspendLayout();
@@ -99,6 +100,7 @@ namespace UnityDownloader
             // 
             // groupControl1
             // 
+            groupControl1.Controls.Add(btnManualUpdate);
             groupControl1.Controls.Add(cbxHub);
             groupControl1.Controls.Add(lblTotalTime);
             groupControl1.Controls.Add(pbar);
@@ -124,7 +126,7 @@ namespace UnityDownloader
             // 
             // cbxHub
             // 
-            cbxHub.Location = new Point(514, 144);
+            cbxHub.Location = new Point(405, 146);
             cbxHub.Name = "cbxHub";
             cbxHub.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] { new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo) });
             cbxHub.Properties.Items.AddRange(new object[] { "None", "Windows", "Mac", "Linux" });
@@ -151,7 +153,7 @@ namespace UnityDownloader
             // 
             // btnOpenDirectory
             // 
-            btnOpenDirectory.Location = new Point(383, 143);
+            btnOpenDirectory.Location = new Point(313, 145);
             btnOpenDirectory.Name = "btnOpenDirectory";
             btnOpenDirectory.Size = new Size(75, 23);
             btnOpenDirectory.TabIndex = 12;
@@ -192,7 +194,7 @@ namespace UnityDownloader
             // 
             // btnDownloadEditor
             // 
-            btnDownloadEditor.Location = new Point(252, 143);
+            btnDownloadEditor.Location = new Point(217, 145);
             btnDownloadEditor.Name = "btnDownloadEditor";
             btnDownloadEditor.Size = new Size(75, 23);
             btnDownloadEditor.TabIndex = 7;
@@ -201,7 +203,7 @@ namespace UnityDownloader
             // 
             // btnDownloadEditorJson
             // 
-            btnDownloadEditorJson.Location = new Point(121, 143);
+            btnDownloadEditorJson.Location = new Point(121, 145);
             btnDownloadEditorJson.Name = "btnDownloadEditorJson";
             btnDownloadEditorJson.Size = new Size(75, 23);
             btnDownloadEditorJson.TabIndex = 6;
@@ -274,7 +276,7 @@ namespace UnityDownloader
             splitContainerControl2.Panel2.Controls.Add(memTxt);
             splitContainerControl2.Panel2.Text = "Panel2";
             splitContainerControl2.Size = new Size(1364, 775);
-            splitContainerControl2.SplitterPosition = 1121;
+            splitContainerControl2.SplitterPosition = 961;
             splitContainerControl2.TabIndex = 0;
             // 
             // gridControl
@@ -283,7 +285,7 @@ namespace UnityDownloader
             gridControl.Location = new Point(0, 0);
             gridControl.MainView = gridView;
             gridControl.Name = "gridControl";
-            gridControl.Size = new Size(1121, 775);
+            gridControl.Size = new Size(961, 775);
             gridControl.TabIndex = 0;
             gridControl.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] { gridView });
             // 
@@ -297,8 +299,18 @@ namespace UnityDownloader
             memTxt.Dock = DockStyle.Fill;
             memTxt.Location = new Point(0, 0);
             memTxt.Name = "memTxt";
-            memTxt.Size = new Size(233, 775);
+            memTxt.Size = new Size(393, 775);
             memTxt.TabIndex = 0;
+            // 
+            // btnManualUpdate
+            // 
+            btnManualUpdate.Location = new Point(504, 145);
+            btnManualUpdate.Name = "btnManualUpdate";
+            btnManualUpdate.Size = new Size(75, 23);
+            btnManualUpdate.TabIndex = 16;
+            btnManualUpdate.Text = "手动更新";
+            btnManualUpdate.ToolTip = "点击此按钮将拷贝一份js到剪贴板,请手动在浏览器打开编辑器资源地址,并在浏览器控制台中粘贴js代码并回车执行,最后将输出结果粘贴到editor.json中";
+            btnManualUpdate.Click += btnManualUpdate_Click;
             // 
             // MainForm
             // 
@@ -363,5 +375,6 @@ namespace UnityDownloader
         private DevExpress.XtraEditors.LabelControl lblTotalTime;
         private DevExpress.XtraEditors.ProgressBarControl pbar;
         private DevExpress.XtraEditors.ComboBoxEdit cbxHub;
+        private DevExpress.XtraEditors.SimpleButton btnManualUpdate;
     }
 }

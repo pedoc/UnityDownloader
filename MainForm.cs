@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using DevExpress.XtraEditors;
@@ -9,7 +10,10 @@ using Newtonsoft.Json;
 using PuppeteerSharp;
 using Serilog;
 using UnityDownloader.Properties;
+using static UnityDownloader.VersionRecord;
 using Timer = System.Windows.Forms.Timer;
+
+// ReSharper disable LocalizableElement
 
 // ReSharper disable AsyncApostle.ConfigureAwaitHighlighting
 
@@ -33,10 +37,15 @@ public partial class MainForm : XtraForm
         }
         else
         {
-            memTxt.Text += msg + Environment.NewLine;
+            memTxt.Text += $"[{DateTime.Now:yyyyMMdd-HH:mm:ss}]" + msg + Environment.NewLine;
 
             Log.Logger.Information(msg);
         }
+    }
+
+    private void ShowMessage(string prefix, string msg)
+    {
+        ShowMessage($"[{prefix}] {msg}");
     }
 
     const string EditorJSONFile = "editor.json";
@@ -54,63 +63,150 @@ public partial class MainForm : XtraForm
         IPage page = null;
         try
         {
-            var browserFetcher = new BrowserFetcher()
+            var browserFetcher = new BrowserFetcher();
+            var proxyAddress = txtProxy.Text.Trim();
+            var hasProxy = proxyAddress.Length > 0;
+            if (hasProxy)
             {
-                WebProxy = new WebProxy(txtProxy.Text.Trim())
+                browserFetcher.WebProxy = new WebProxy(proxyAddress);
+            }
+
+            var installedBrowser = await browserFetcher.DownloadAsync("124.0.6367.201");
+            var args = new List<string>();
+            LaunchOptions launchOptions = new LaunchOptions()
+            {
+                Headless = false,
+                ExecutablePath = installedBrowser.GetExecutablePath(),
+                Args = []
             };
-            var installedBrowser = await browserFetcher.DownloadAsync();
-            browser = await Puppeteer.LaunchAsync(
-                new LaunchOptions
-                {
-                    Headless = false,
-                    Args = new[]
-                    {
-                        "--proxy-server=\"" + txtProxy.Text.Trim() + "\""
-                    }
-                });
-            page = await browser.NewPageAsync();
+            if (hasProxy)
+            {
+                args.Add("--proxy-server=\"" + proxyAddress + "\"");
+            }
+
+            args.Add("--user-data-dir=userdata-alt");
+            args.Add("--disk-cache-dir=cache-alt");
+
+            if (args.Count > 0)
+            {
+                launchOptions.Args = args.Select(i => i = " " + i).ToArray();
+            }
+
+            browser = await Puppeteer.LaunchAsync(launchOptions);
+            page = (await browser.PagesAsync())[0];
             await page.SetUserAgentAsync(
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0");
-            await page.GoToAsync(txtEditorJson.Text.Trim(), WaitUntilNavigation.DOMContentLoaded);
+            var targetAddress = txtEditorJson.Text.Trim();
+            await page.GoToAsync(targetAddress, WaitUntilNavigation.DOMContentLoaded);
 
             var elements = await page.QuerySelectorAllAsync(txtSelector.Text.Trim());
-            if (elements.Length <= 0)
+            //await Task.Delay(TimeSpan.FromSeconds(5));
+            await page.WaitForSelectorAsync(txtSelector.Text.Trim(), new WaitForSelectorOptions()
             {
-                ShowMessage("未抓取到任何有效元素,请调整选择器");
+                Visible = true
+            });
+
+            if (!page.Url.StartsWith(targetAddress))
+            {
+                ShowMessage($"地址已被重定向到 {page.Url},请检查代理是否生效");
                 return false;
             }
 
-            var dict = new Dictionary<string, object>();
+
+            const int maxRetryCount = 3;
+            int retryCount = 1;
+            do
+            {
+                if (elements.Length <= 0)
+                {
+                    ShowMessage($"未抓取到任何有效元素,正在重试第 {retryCount} 次");
+                    await Task.Delay(TimeSpan.FromSeconds(5));
+                    elements = await page.QuerySelectorAllAsync(txtSelector.Text.Trim());
+                }
+                else
+                {
+                    break;
+                }
+            } while (retryCount++ <= maxRetryCount);
+
+            if (retryCount > maxRetryCount && elements.Length <= 0)
+            {
+                return false;
+            }
+
+            List<VersionRecord> versions = new();
             foreach (var elementHandle in elements)
             {
+                VersionRecord vr = new();
+                var webMajorVersionText = await elementHandle.GetInnerTextAsync();
+                ShowMessage($"正在抓取 {webMajorVersionText}");
                 await elementHandle.ClickAsync();
-                await Task.Delay(TimeSpan.FromSeconds(1));
+                await Task.Delay(TimeSpan.FromSeconds(3));
 
                 var tableElement = await page.QuerySelectorAsync("table");
-                if (tableElement == null) continue;
+                retryCount = 1;
+                do
+                {
+                    if (tableElement == null)
+                    {
+                        ShowMessage(webMajorVersionText, $"未找到table元素,正在重试第 {retryCount} 次");
+                        await Task.Delay(TimeSpan.FromSeconds(3));
+                        tableElement = await page.QuerySelectorAsync("table");
+                    }
+                    else
+                    {
+                        break;
+                    }
+                } while (retryCount++ <= maxRetryCount);
+
+                if (retryCount > maxRetryCount && tableElement == null)
+                {
+                    ShowMessage(webMajorVersionText, "未找到table元素,所有尝试均失败");
+                    continue;
+                }
+
                 var trElements = await tableElement.QuerySelectorAllAsync("tbody>tr");
+                ShowMessage(webMajorVersionText,
+                    $"发现版本总数:{trElements.Length},已抓取:{versions.Sum(v => v.Versions.Count)}");
                 foreach (var trElement in trElements)
                 {
+                    var webMinorVersionText = await trElement.GetInnerTextAsync();
+                    if (webMinorVersionText.Contains("\n"))
+                    {
+                        webMinorVersionText = webMinorVersionText.Split("\n")[0];
+                    }
+
                     var downloadElement = await trElement.QuerySelectorAsync("a[href^=\"unityhub://\"");
-                    if (downloadElement == null) continue;
+                    if (downloadElement == null)
+                    {
+                        ShowMessage($"{webMajorVersionText}-{webMinorVersionText}", "未找到下载按钮");
+                        continue;
+                    }
+
                     var href = await downloadElement.GetPropertyAsync("href");
-                    if (href == null) continue;
+                    if (href == null)
+                    {
+                        ShowMessage($"{webMajorVersionText}-{webMinorVersionText}", "未找到下载地址");
+                        continue;
+                    }
+
                     var hrefString = href.ToString();
                     if (string.IsNullOrEmpty(hrefString)) continue;
 
                     var releaseDate = await trElement.QuerySelectorAsync("td:nth-child(2) > div > span");
+                    var releaseDateText = await releaseDate.GetInnerTextAsync();
 
                     var match = Regex.Match(hrefString, "unityhub://(?<version>.*)/(?<hash>.*)",
                         RegexOptions.Compiled,
                         TimeSpan.FromSeconds(3));
                     if (match.Success)
                     {
+                        vr.WebMajorVersionText = webMajorVersionText;
                         var version = match.Groups["version"].Value;
                         var hash = match.Groups["hash"].Value;
-
-                        dict[version] = new
+                        vr.Versions[version] = new VersionRecordItem
                         {
-                            releaseDate = (await releaseDate.GetInnerTextAsync()),
+                            releaseDate = releaseDateText,
                             hash = hash,
                             version = version,
 
@@ -123,11 +219,17 @@ public partial class MainForm : XtraForm
                             win64 =
                                 $"https://download.unity3d.com/download_unity/{hash}/Windows64EditorInstaller/UnitySetup64-{version}.exe"
                         };
+                        versions.Add(vr);
+                        //ShowMessage($"{webMajorVersionText}-{webMinorVersionText}",$"日期:{releaseDateText},hash:{hash},总数:{dict.Keys.Count}");
+                    }
+                    else
+                    {
+                        ShowMessage($"{webMajorVersionText}-{webMinorVersionText}", "未能解析版本号和hash值");
                     }
                 }
             }
 
-            var json = JsonConvert.SerializeObject(dict, Formatting.Indented);
+            var json = JsonConvert.SerializeObject(versions, Formatting.Indented);
             await File.WriteAllTextAsync(EditorJSONFile, json);
 
             await page.CloseAsync();
@@ -159,78 +261,59 @@ public partial class MainForm : XtraForm
         try
         {
             var json = File.ReadAllText(EditorJSONFile);
-            var editor = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, string>>>(json);
+            var versionRecords = JsonConvert.DeserializeObject<List<VersionRecord>>(json);
             var editorItems = new List<EditorItem>();
-            foreach (var (version, items) in editor)
+            foreach (var versionRecord in versionRecords)
             {
-                var editorItem = new EditorItem()
+                foreach (var (version, item) in versionRecord.Versions)
                 {
-                    Version = version,
-                    Linux = new List<EditorComponent>(),
-                    Mac = new List<EditorComponent>(),
-                    MacArm64 = new List<EditorComponent>(),
-                    Win64 = new List<EditorComponent>(),
-                };
-                foreach (var (key, value) in items)
-                {
-                    switch (key.ToLower())
+                    var editorItem = new EditorItem()
                     {
-                        case "linux":
-                            editorItem.Linux.Add(new EditorComponent()
-                            {
-                                Name = "UnityEditor",
-                                DownloadUrl = value,
-                            });
-                            break;
-                        case "mac":
-                            editorItem.Mac.Add(new EditorComponent()
-                            {
-                                Name = "UnityEditor",
-                                DownloadUrl = value,
-                            });
-                            break;
-                        case "macarm64":
-                            editorItem.MacArm64.Add(new EditorComponent()
-                            {
-                                Name = "UnityEditor",
-                                DownloadUrl = value,
-                            });
-                            break;
-                        case "win64":
-                            editorItem.Win64.Add(new EditorComponent()
-                            {
-                                Name = "UnityEditor",
-                                DownloadUrl = value,
-                            });
-                            break;
-                        case "releasedate":
-                            editorItem.ReleaseDate = value;
-                            break;
-                        case "hash":
-                            editorItem.Hash = value;
-                            break;
-                        case "version":
-                            editorItem.Version = value;
-                            break;
-                        default: continue;
+                        Version = version,
+                        Linux = new List<EditorComponent>(),
+                        Mac = new List<EditorComponent>(),
+                        MacArm64 = new List<EditorComponent>(),
+                        Win64 = new List<EditorComponent>(),
+                        ReleaseDate = item.releaseDate,
+                        Hash = item.hash
+                    };
+                    editorItem.Linux.Add(new EditorComponent()
+                    {
+                        Name = "UnityEditor",
+                        DownloadUrl = item.linux
+                    });
+                    editorItem.Mac.Add(new EditorComponent()
+                    {
+                        Name = "UnityEditor",
+                        DownloadUrl = item.mac,
+                    });
+                    editorItem.MacArm64.Add(new EditorComponent()
+                    {
+                        Name = "UnityEditor",
+                        DownloadUrl = item.macArm64,
+                    });
+                    editorItem.Win64.Add(new EditorComponent()
+                    {
+                        Name = "UnityEditor",
+                        DownloadUrl = item.win64,
+                    });
+
+                    //如果没有hash则尝试从url中提取填充
+                    if (string.IsNullOrEmpty(editorItem.Hash))
+                    {
+                        var url = editorItem.Win64.First().DownloadUrl;
+                        editorItem.Hash = url.Replace("https://download.unity3d.com/download_unity/", "")
+                            .Substring(0, 12);
                     }
+
+                    editorItem.FillWin64EditorComponent();
+
+                    editorItem.FillMacOsEditorComponent();
+                    editorItem.FillMacOsArm64EditorComponent();
+                    editorItem.FillLinuxEditorComponent();
+
+                    editorItems.Add(editorItem);
                 }
-
-                //如果没有hash则尝试从url中提取填充
-                if (string.IsNullOrEmpty(editorItem.Hash))
-                {
-                    var url = editorItem.Win64.First().DownloadUrl;
-                    editorItem.Hash = url.Replace("https://download.unity3d.com/download_unity/", "")
-                        .Substring(0, 12);
-                }
-
-                editorItem.FillWin64EditorComponent();
-
-                editorItem.FillMacOsEditorComponent();
-                editorItem.FillMacOsArm64EditorComponent();
-                editorItem.FillLinuxEditorComponent();
-
-                editorItems.Add(editorItem);
             }
 
             gridView.OptionsBehavior.ReadOnly = true;
@@ -242,6 +325,8 @@ public partial class MainForm : XtraForm
             gridControl.DataSource = editorItems;
             gridView.Columns[nameof(EditorItem.VersionMajor)].Group();
             //gridView.Columns[nameof(EditorItem.VersionMinor)].Group();
+
+            Text += $"(资源更新时间:{new FileInfo(EditorJSONFile).LastWriteTime:yyyy-MM-dd HH:mm:ss})";
         }
         catch (Exception e)
         {
@@ -278,6 +363,9 @@ public partial class MainForm : XtraForm
 
     private void MainForm_Load(object sender, EventArgs e)
     {
+        Version version = Assembly.GetExecutingAssembly().GetName().Version;
+        Text += $" -v{version}";
+
         TryLoadEditorJson();
     }
 
@@ -485,6 +573,7 @@ public partial class MainForm : XtraForm
                         var keydata = Encoding.ASCII.GetBytes(newCert);
                         if (keydata.Length == fingerprintData.Length)
                         {
+                            File.Copy(targetDll, targetDll + ".bak", true);
                             using var file = File.Open(targetDll, FileMode.Open, FileAccess.ReadWrite);
                             file.Position = begin;
                             file.Write(keydata, 0, keydata.Length);
@@ -591,5 +680,19 @@ public partial class MainForm : XtraForm
         };
         downloader.DownloadStarted += (s, e) => { ShowMessage($"开始下载 {cbxHub.Text.Trim()} Unity Hub,请稍等"); };
         _ = downloader.DownloadFileTaskAsync(downloadUri, fileName);
+    }
+
+    private void btnManualUpdate_Click(object sender, EventArgs e)
+    {
+        const string jsResourceFileName = "fetch.js";
+        if (File.Exists(jsResourceFileName))
+        {
+            Clipboard.SetText(File.ReadAllText(jsResourceFileName));
+            ShowMessage("脚本代码已拷贝至剪贴板");
+        }
+        else
+        {
+            ShowMessage("${jsResourceFileName}脚本文件不存在");
+        }
     }
 }
