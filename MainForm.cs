@@ -70,8 +70,8 @@ public partial class MainForm : XtraForm
             {
                 browserFetcher.WebProxy = new WebProxy(proxyAddress);
             }
-
-            var installedBrowser = await browserFetcher.DownloadAsync("124.0.6367.201");
+            //124.0.6367.201
+            var installedBrowser = await browserFetcher.DownloadAsync();
             var args = new List<string>();
             LaunchOptions launchOptions = new LaunchOptions()
             {
@@ -108,7 +108,7 @@ public partial class MainForm : XtraForm
 
             if (!page.Url.StartsWith(targetAddress))
             {
-                ShowMessage($"地址已被重定向到 {page.Url},请检查代理是否生效");
+                ShowMessage($"{targetAddress} 已被重定向到 {page.Url},请检查代理是否生效");
                 return false;
             }
 
