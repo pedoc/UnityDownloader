@@ -457,13 +457,13 @@ public partial class MainForm : XtraForm
             var downloader = CreateDownloader(num);
             downloader.DownloadStarted += (s, dpce) =>
             {
-                editorComponent.DownloadSize = 0;
+                editorComponent.DownloadSize = dpce.TotalBytesToReceive / 1024 / 1024;;
             };
             downloader.DownloadProgressChanged += (s, dpce) =>
             {
                 editorComponent.DownloadProgress = dpce.ProgressPercentage;
                 editorComponent.DownloadElapsed = sw.Elapsed;
-                editorComponent.DownloadSize = dpce.ReceivedBytesSize / 1024 / 1024;
+                //editorComponent.DownloadSize = dpce.ReceivedBytesSize / 1024 / 1024;
 
                 if (dpce.ProgressPercentage >= 100)
                 {
