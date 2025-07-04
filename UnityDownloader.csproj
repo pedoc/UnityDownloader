@@ -46,6 +46,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="editor.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="fetch.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
