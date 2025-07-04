@@ -70,6 +70,7 @@ public partial class MainForm : XtraForm
             {
                 browserFetcher.WebProxy = new WebProxy(proxyAddress);
             }
+
             //124.0.6367.201
             var installedBrowser = await browserFetcher.DownloadAsync();
             var args = new List<string>();
@@ -373,7 +374,7 @@ public partial class MainForm : XtraForm
     {
         var downloadOpt = new DownloadConfiguration()
         {
-            ChunkCount = Math.Max(1, Environment.ProcessorCount - 1),
+            ChunkCount = 1, // Math.Max(1, Environment.ProcessorCount - 1),
             ParallelDownload = true,
             ParallelCount = parallelCount,
             RequestConfiguration =
@@ -456,12 +457,19 @@ public partial class MainForm : XtraForm
             var downloader = CreateDownloader(num);
             downloader.DownloadStarted += (s, dpce) =>
             {
-                editorComponent.DownloadSize = dpce.TotalBytesToReceive / 1024 / 1024;
+                editorComponent.DownloadSize = 0;
             };
             downloader.DownloadProgressChanged += (s, dpce) =>
             {
                 editorComponent.DownloadProgress = dpce.ProgressPercentage;
                 editorComponent.DownloadElapsed = sw.Elapsed;
+                editorComponent.DownloadSize = dpce.ReceivedBytesSize / 1024 / 1024;
+
+                if (dpce.ProgressPercentage >= 100)
+                {
+                    editorComponent.DownloadCompleted = true;
+                    editorComponent.DownloadProgress = 100;
+                }
             };
             downloader.DownloadFileCompleted += (s, ace) =>
             {
