@@ -50,43 +50,40 @@ public partial class MainForm : XtraForm
 
     const string EditorJSONFile = "editor.json";
 
-    private static string ResetBrowserDirectory(string browserDirectory, string directoryName)
+    private static async Task SetUnityArchiveCookiesAsync(IPage page)
     {
-        browserDirectory = Path.GetFullPath(browserDirectory)
-            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-        var directory = Path.GetFullPath(Path.Combine(browserDirectory, directoryName));
-        var expectedPrefix = browserDirectory + Path.DirectorySeparatorChar;
+        const string unityUrl = "https://unity.com/";
+        string[] languageCookieNames = ["NEXT_LOCALE", "language_redirected"];
 
-        // 只允许删除 chrome.exe 所在目录下明确指定的浏览器专用目录。
-        if (!directory.StartsWith(expectedPrefix, StringComparison.OrdinalIgnoreCase))
+        // 用户目录会被保留，因此先删除所有可能与目标语言状态冲突的同名 Cookie。
+        var cookiesToDelete = (await page.GetCookiesAsync(unityUrl))
+            .Where(cookie => languageCookieNames.Contains(cookie.Name))
+            .Select(cookie => new CookieParam
+            {
+                Name = cookie.Name,
+                Domain = cookie.Domain,
+                Path = cookie.Path
+            })
+            .ToArray();
+
+        if (cookiesToDelete.Length > 0)
         {
-            throw new InvalidOperationException($"浏览器数据目录不安全，拒绝删除:{directory}");
+            await page.DeleteCookieAsync(cookiesToDelete);
         }
 
-        if (Directory.Exists(directory))
-        {
-            Directory.Delete(directory, recursive: true);
-        }
-
-        Directory.CreateDirectory(directory);
-        return directory;
-    }
-
-    private static Task SetUnityArchiveCookiesAsync(IPage page)
-    {
-        return page.SetCookieAsync(
+        await page.SetCookieAsync(
             new CookieParam
             {
                 Name = "NEXT_LOCALE",
                 Value = "en",
-                Url = "https://unity.com/",
+                Url = unityUrl,
                 Secure = true
             },
             new CookieParam
             {
                 Name = "language_redirected",
                 Value = "true",
-                Url = "https://unity.com/",
+                Url = unityUrl,
                 Secure = true
             });
     }
@@ -129,9 +126,9 @@ public partial class MainForm : XtraForm
                 args.Add("--proxy-server=\"" + proxyAddress + "\"");
             }
 
-            // 自定义目录位于 chrome.exe 旁边；每次启动前删除，避免携带历史 Cookie。
-            var userDataDirectory = ResetBrowserDirectory(browserDirectory, "userdata-alt");
-            var cacheDirectory = ResetBrowserDirectory(browserDirectory, "cache-alt");
+            // 保留 chrome.exe 旁边的专用用户目录，只在导航前覆盖 Unity 的语言 Cookie。
+            var userDataDirectory = Path.Combine(browserDirectory, "userdata-alt");
+            var cacheDirectory = Path.Combine(browserDirectory, "cache-alt");
 
             args.Add($"--user-data-dir=\"{userDataDirectory}\"");
             args.Add($"--disk-cache-dir=\"{cacheDirectory}\"");
