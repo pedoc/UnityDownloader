@@ -72,6 +72,25 @@ public partial class MainForm : XtraForm
         return directory;
     }
 
+    private static Task SetUnityArchiveCookiesAsync(IPage page)
+    {
+        return page.SetCookieAsync(
+            new CookieParam
+            {
+                Name = "NEXT_LOCALE",
+                Value = "en",
+                Url = "https://unity.com/",
+                Secure = true
+            },
+            new CookieParam
+            {
+                Name = "language_redirected",
+                Value = "true",
+                Url = "https://unity.com/",
+                Secure = true
+            });
+    }
+
     private async Task<bool> GenerateEditorJsonFileAsync()
     {
         //const string url = "https://unity3d.com/get-unity/download/archive";
@@ -126,6 +145,9 @@ public partial class MainForm : XtraForm
             page = (await browser.PagesAsync())[0];
             await page.SetUserAgentAsync(
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0");
+            // Unity 在没有语言状态时会根据浏览器语言跳转到 /cn/；预置与手动浏览器一致的语言状态。
+            await SetUnityArchiveCookiesAsync(page);
+
             var targetAddress = txtEditorJson.Text.Trim();
             await page.GoToAsync(targetAddress, WaitUntilNavigation.DOMContentLoaded);
 

@@ -222,7 +222,7 @@ namespace UnityDownloader
             // 
             // txtEditorJson
             // 
-            txtEditorJson.EditValue = "https://unity3d.com/get-unity/download/archive";
+            txtEditorJson.EditValue = "https://unity.com/releases/editor/archive";
             txtEditorJson.Location = new Point(122, 81);
             txtEditorJson.Name = "txtEditorJson";
             txtEditorJson.Size = new Size(495, 20);
