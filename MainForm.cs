@@ -272,29 +272,29 @@ public partial class MainForm : XtraForm
         {
             // null 条件运算符在对象为 null 时会返回 null Task，直接 await 会再次
             // 抛出 NullReferenceException，并掩盖真正的页面加载/浏览器启动异常。
-            if (page is not null)
-            {
-                try
-                {
-                    await page.CloseAsync();
-                }
-                catch (Exception ex)
-                {
-                    ShowMessage($"关闭浏览器页面时出错,详情:{ex.Message}");
-                }
-            }
+            // if (page is not null)
+            // {
+            //     try
+            //     {
+            //         await page.CloseAsync();
+            //     }
+            //     catch (Exception ex)
+            //     {
+            //         ShowMessage($"关闭浏览器页面时出错,详情:{ex.Message}");
+            //     }
+            // }
 
-            if (browser is not null)
-            {
-                try
-                {
-                    await browser.CloseAsync();
-                }
-                catch (Exception ex)
-                {
-                    ShowMessage($"关闭浏览器时出错,详情:{ex.Message}");
-                }
-            }
+            // if (browser is not null)
+            // {
+            //     try
+            //     {
+            //         await browser.CloseAsync();
+            //     }
+            //     catch (Exception ex)
+            //     {
+            //         ShowMessage($"关闭浏览器时出错,详情:{ex.Message}");
+            //     }
+            // }
         }
 
         return false;
