@@ -50,6 +50,28 @@ public partial class MainForm : XtraForm
 
     const string EditorJSONFile = "editor.json";
 
+    private static string ResetBrowserDirectory(string browserDirectory, string directoryName)
+    {
+        browserDirectory = Path.GetFullPath(browserDirectory)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        var directory = Path.GetFullPath(Path.Combine(browserDirectory, directoryName));
+        var expectedPrefix = browserDirectory + Path.DirectorySeparatorChar;
+
+        // 只允许删除 chrome.exe 所在目录下明确指定的浏览器专用目录。
+        if (!directory.StartsWith(expectedPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException($"浏览器数据目录不安全，拒绝删除:{directory}");
+        }
+
+        if (Directory.Exists(directory))
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+
+        Directory.CreateDirectory(directory);
+        return directory;
+    }
+
     private async Task<bool> GenerateEditorJsonFileAsync()
     {
         //const string url = "https://unity3d.com/get-unity/download/archive";
@@ -73,11 +95,14 @@ public partial class MainForm : XtraForm
 
             //124.0.6367.201
             var installedBrowser = await browserFetcher.DownloadAsync();
+            var chromeExecutablePath = installedBrowser.GetExecutablePath();
+            var browserDirectory = Path.GetDirectoryName(chromeExecutablePath)
+                                   ?? throw new InvalidOperationException($"无法获取 Chrome 所在目录:{chromeExecutablePath}");
             var args = new List<string>();
             LaunchOptions launchOptions = new LaunchOptions()
             {
                 Headless = false,
-                ExecutablePath = installedBrowser.GetExecutablePath(),
+                ExecutablePath = chromeExecutablePath,
                 Args = []
             };
             if (hasProxy)
@@ -85,8 +110,12 @@ public partial class MainForm : XtraForm
                 args.Add("--proxy-server=\"" + proxyAddress + "\"");
             }
 
-            args.Add("--user-data-dir=userdata-alt");
-            args.Add("--disk-cache-dir=cache-alt");
+            // 自定义目录位于 chrome.exe 旁边；每次启动前删除，避免携带历史 Cookie。
+            var userDataDirectory = ResetBrowserDirectory(browserDirectory, "userdata-alt");
+            var cacheDirectory = ResetBrowserDirectory(browserDirectory, "cache-alt");
+
+            args.Add($"--user-data-dir=\"{userDataDirectory}\"");
+            args.Add($"--disk-cache-dir=\"{cacheDirectory}\"");
 
             if (args.Count > 0)
             {
@@ -100,19 +129,19 @@ public partial class MainForm : XtraForm
             var targetAddress = txtEditorJson.Text.Trim();
             await page.GoToAsync(targetAddress, WaitUntilNavigation.DOMContentLoaded);
 
-            var elements = await page.QuerySelectorAllAsync(txtSelector.Text.Trim());
-            //await Task.Delay(TimeSpan.FromSeconds(5));
-            await page.WaitForSelectorAsync(txtSelector.Text.Trim(), new WaitForSelectorOptions()
-            {
-                Visible = true
-            });
-
+            // 不允许目标地址发生重定向，发现跳转后立即停止，不再解析页面。
             if (!page.Url.StartsWith(targetAddress))
             {
                 ShowMessage($"{targetAddress} 已被重定向到 {page.Url},请检查代理是否生效");
                 return false;
             }
 
+            var elements = await page.QuerySelectorAllAsync(txtSelector.Text.Trim());
+            //await Task.Delay(TimeSpan.FromSeconds(5));
+            await page.WaitForSelectorAsync(txtSelector.Text.Trim(), new WaitForSelectorOptions()
+            {
+                Visible = true
+            });
 
             const int maxRetryCount = 3;
             int retryCount = 1;
