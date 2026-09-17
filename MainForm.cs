@@ -115,28 +115,23 @@ public partial class MainForm : XtraForm
             var browserDirectory = Path.GetDirectoryName(chromeExecutablePath)
                                    ?? throw new InvalidOperationException($"无法获取 Chrome 所在目录:{chromeExecutablePath}");
             var args = new List<string>();
+            if (hasProxy)
+            {
+                args.Add($"--proxy-server={proxyAddress}");
+            }
+
+            // PuppeteerSharp 25 必须通过 UserDataDir 属性指定配置目录；
+            // 如果仅放进 Args，它还会追加一个临时 --user-data-dir，导致自定义目录被覆盖。
+            var userDataDirectory = Path.Combine(browserDirectory, "userdata-alt");
+            Directory.CreateDirectory(userDataDirectory);
+
             LaunchOptions launchOptions = new LaunchOptions()
             {
                 Headless = false,
                 ExecutablePath = chromeExecutablePath,
-                Args = []
+                UserDataDir = userDataDirectory,
+                Args = args.ToArray()
             };
-            if (hasProxy)
-            {
-                args.Add("--proxy-server=\"" + proxyAddress + "\"");
-            }
-
-            // 保留 chrome.exe 旁边的专用用户目录，只在导航前覆盖 Unity 的语言 Cookie。
-            var userDataDirectory = Path.Combine(browserDirectory, "userdata-alt");
-            var cacheDirectory = Path.Combine(browserDirectory, "cache-alt");
-
-            args.Add($"--user-data-dir=\"{userDataDirectory}\"");
-            args.Add($"--disk-cache-dir=\"{cacheDirectory}\"");
-
-            if (args.Count > 0)
-            {
-                launchOptions.Args = args.Select(i => i = " " + i).ToArray();
-            }
 
             browser = await Puppeteer.LaunchAsync(launchOptions);
             page = (await browser.PagesAsync())[0];
@@ -285,35 +280,36 @@ public partial class MainForm : XtraForm
         }
         catch (Exception ex)
         {
-            ShowMessage($"读取页面出错,详情:{ex.Message},堆栈:{ex.StackTrace}");
+            // ToString() 会包含内部异常，浏览器启动失败时可看到真正的进程错误。
+            ShowMessage($"读取页面出错,详情:{ex}");
         }
         finally
         {
             // null 条件运算符在对象为 null 时会返回 null Task，直接 await 会再次
             // 抛出 NullReferenceException，并掩盖真正的页面加载/浏览器启动异常。
-            // if (page is not null)
-            // {
-            //     try
-            //     {
-            //         await page.CloseAsync();
-            //     }
-            //     catch (Exception ex)
-            //     {
-            //         ShowMessage($"关闭浏览器页面时出错,详情:{ex.Message}");
-            //     }
-            // }
+            if (page is not null)
+            {
+                try
+                {
+                    await page.CloseAsync();
+                }
+                catch (Exception ex)
+                {
+                    ShowMessage($"关闭浏览器页面时出错,详情:{ex.Message}");
+                }
+            }
 
-            // if (browser is not null)
-            // {
-            //     try
-            //     {
-            //         await browser.CloseAsync();
-            //     }
-            //     catch (Exception ex)
-            //     {
-            //         ShowMessage($"关闭浏览器时出错,详情:{ex.Message}");
-            //     }
-            // }
+            if (browser is not null)
+            {
+                try
+                {
+                    await browser.CloseAsync();
+                }
+                catch (Exception ex)
+                {
+                    ShowMessage($"关闭浏览器时出错,详情:{ex.Message}");
+                }
+            }
         }
 
         return false;
